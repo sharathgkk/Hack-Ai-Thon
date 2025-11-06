@@ -14,22 +14,20 @@ function openModal(modalId) {
         console.warn(`Modal with ID '${modalId}' not found`);
         return;
     }
-
-    // Hide all other modals
+    // Close other modals first
     document.querySelectorAll('.modal').forEach(m => {
         if (m.id !== modalId) {
-            m.style.display = 'none';
+            m.classList.remove('show');
         }
     });
 
-    // Show requested modal
-    modal.style.display = 'block';
-    modal.classList.add('modal-visible');
+    // Show requested modal using the .show class (styles.css handles display)
+    modal.classList.add('show');
 
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
 
-    // Add backdrop if not exists
+    // Ensure a backdrop exists and is visible
     let backdrop = document.querySelector('.modal-backdrop');
     if (!backdrop) {
         backdrop = document.createElement('div');
@@ -46,18 +44,14 @@ function closeModal(modalId) {
         console.warn(`Modal with ID '${modalId}' not found`);
         return;
     }
+    modal.classList.remove('show');
 
-    modal.style.display = 'none';
-    modal.classList.remove('modal-visible');
-
-    // Check if any modals are still open
-    const openModals = document.querySelectorAll('.modal[style*="display: block"]');
-    if (openModals.length === 0) {
-        document.body.style.overflow = 'auto';
+    // If no other modals are visible, hide backdrop and restore scrolling
+    const anyOpen = Array.from(document.querySelectorAll('.modal')).some(m => m.classList.contains('show'));
+    if (!anyOpen) {
         const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-            backdrop.style.display = 'none';
-        }
+        if (backdrop) backdrop.style.display = 'none';
+        document.body.style.overflow = '';
     }
 }
 
