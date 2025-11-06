@@ -1,0 +1,3165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNISPHERE - Dashboard</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Inline Styles (from original) -->
+    <style>
+        /* ============================================
+           CUSTOMIZATION SECTION - SIDEBAR & LAYOUT
+           ============================================ */
+        :root {
+            /* Sidebar Configuration */
+            --sidebar-width: 250px;
+            --sidebar-z-index: 2000;
+            --dropdown-z-index: 3000;
+            --modal-z-index: 4000;
+            --content-margin-left: 250px;
+
+            /* Neon Colors */
+            --neon-cyan: 0, 217, 255;
+            --neon-pink: 255, 0, 110;
+            --neon-purple: 191, 0, 255;
+            --neon-green: 57, 255, 20;
+            --neon-gold: 255, 215, 0;
+
+            /* Dark Theme Colors */
+            --dark-bg: 10, 14, 39;
+            --dark-surface: 31, 13, 71;
+            --dark-card: 20, 24, 60;
+        }
+
+        /* ============================================
+           GLOBAL STYLES
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgb(var(--dark-bg)), rgb(var(--dark-surface)));
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .section {
+            display: none;
+            min-height: calc(100vh - 100px);
+            padding: 20px;
+        }
+
+        .section.active-section {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 4000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: rgb(var(--dark-card));
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            border: 1px solid rgba(var(--neon-cyan), 0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3999;
+            display: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- MAIN CONTENT FROM ORIGINAL -->
+
+    <!-- ============================================
+         LANDING PAGE
+         ============================================ -->
+    <div id="landingPage" class="landing-page">
+        <div class="landing-hero">
+            <h1>🎓 UNISPHERE</h1>
+            <p>Your all-in-one platform for academic success, wellness, career guidance, and community support</p>
+            <button class="btn-primary" onclick="showLogin()">Get Started</button>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>📚 Academics Hub</h3>
+                <p>Interactive learning modes, course tracking, and performance analytics</p>
+            </div>
+            <div class="feature-card">
+                <h3>❤️ Wellness Center</h3>
+                <p>Mental health support, mood tracking, and counseling services</p>
+            </div>
+            <div class="feature-card">
+                <h3>💼 Career Pathways</h3>
+                <p>Career counseling, internships, and interview preparation</p>
+            </div>
+            <div class="feature-card">
+                <h3>💰 Financial Aid</h3>
+                <p>Emergency funds, scholarships, loans, and budget tools</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         LOGIN PAGE
+         ============================================ -->
+    <div id="loginPage" class="login-page hidden">
+        <div class="login-container">
+            <h2>🔐 Student Login</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="student@university.edu" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Login</button>
+                <p style="text-align: center; margin-top: 20px; color: rgba(255, 255, 255, 0.6);">
+                    Demo: Any email/password will work
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MAIN DASHBOARD (SIDEBAR + CONTENT)
+         ============================================ -->
+    <div id="mainDashboard" class="hidden">
+        <!-- FIXED SIDEBAR -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 UNISPHERE</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><div class="menu-item active" onclick="switchSection('dashboard')">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('academics')">
+                    <span class="icon">📚</span>
+                    <span>Academics Hub</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('wellness')">
+                    <span class="icon">❤️</span>
+                    <span>Wellness Center</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('career')">
+                    <span class="icon">💼</span>
+                    <span>Career Pathways</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('appointments')">
+                    <span class="icon">📅</span>
+                    <span>Appointments</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('financial')">
+                    <span class="icon">💰</span>
+                    <span>Financial Aid</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('studyGroups')">
+                    <span class="icon">📚</span>
+                    <span>Study Groups</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('mentors')">
+                    <span class="icon">🌟</span>
+                    <span>Peer Mentors</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('community')">
+                    <span class="icon">👥</span>
+                    <span>Community</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('library')">
+                    <span class="icon">📖</span>
+                    <span>E-Library</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('campus')">
+                    <span class="icon">🗺️</span>
+                    <span>Campus Maps</span>
+                </div></li>
+                <li><div class="menu-item" onclick="switchSection('settings')">
+                    <span class="icon">⚙️</span>
+                    <span>Settings</span>
+                </div></li>
+            </ul>
+        </nav>
+
+        <!-- MAIN CONTENT AREA (WITH LEFT MARGIN FOR SIDEBAR) -->
+        <main class="dashboard-container">
+            <!-- ============================================
+                 DASHBOARD SECTION
+                 ============================================ -->
+            <section id="dashboardSection" class="section active">
+                <div class="dashboard-header">
+                    <h1>📊 Dashboard Overview</h1>
+                    <p>Welcome back! Here's your academic snapshot</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>📚 Current GPA</h3>
+                        <div class="card-stat">3.75</div>
+                        <p>Excellent progress this semester!</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="card hydration-container">
+                        <h3>💧 Hydration Tracker</h3>
+                        <div class="card-stat" id="hydrationStat">1500/2000 ml</div>
+                        <p id="hydrationPercent">75% of daily goal</p>
+                        
+                        <div class="water-bottle">
+                            <div class="water-fill" id="waterFill" style="height: 75%;"></div>
+                        </div>
+                        
+                        <div class="water-buttons">
+                            <button class="btn" onclick="addWater(250)">+250ml</button>
+                            <button class="btn" onclick="addWater(500)">+500ml</button>
+                            <button class="btn" onclick="addWater(750)">+750ml</button>
+                        </div>
+                        
+                        <div class="hydration-tip">
+                            <strong>💡 Tip:</strong> <span id="hydrationTip">Drink water every hour to stay energized!</span>
+                        </div>
+                        
+                        <button class="btn btn-full mt-20" onclick="toggleHydrationReminders()" id="reminderToggle">⏰ Enable Reminders</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>⏱️ Study Timer</h3>
+                        <div class="card-stat" id="studyTimer">00:00:00</div>
+                        <button class="btn btn-full" onclick="toggleStudyTimer()">Start Session</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔥 Wellness Streak</h3>
+                        <div class="card-stat">7 Days</div>
+                        <p>Great job maintaining your wellness routine!</p>
+                    </div>
+                </div>
+
+                <!-- Chart Example -->
+                <div class="chart-container">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 20px;">📈 Academic Performance Trend</h3>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 ACADEMICS HUB SECTION
+                 ============================================ -->
+            <section id="academicsSection" class="section">
+                <div class="dashboard-header">
+                    <h1>📚 Academics Hub</h1>
+                    <p>Enhance your learning with interactive study modes</p>
+                </div>
+
+                <div class="learning-modes">
+                    <div class="mode-card" onclick="openModal('learnDetailedModal')" style="border-color: rgb(var(--neon-green));">
+                        <div class="icon">📖</div>
+                        <h4 style="color: rgb(var(--neon-green));">Learn</h4>
+                        <p>Interactive lessons with rich media</p>
+                    </div>
+                    <div class="mode-card" onclick="openModal('quizDetailedModal')" style="border-color: rgb(var(--neon-green));">
+                        <div class="icon">❓</div>
+                        <h4 style="color: rgb(var(--neon-green));">Quiz</h4>
+                        <p>Timed quiz challenges</p>
+                    </div>
+                    <div class="mode-card" onclick="openModal('racePremiumModal')" style="border-color: rgb(var(--neon-gold));">
+                        <div class="icon">🏁</div>
+                        <h4 style="color: rgb(var(--neon-gold));">Race</h4>
+                        <p>Multiplayer races</p>
+                    </div>
+                    <div class="mode-card" onclick="openModal('matchPremiumModal')" style="border-color: rgb(var(--neon-gold));">
+                        <div class="icon">👥</div>
+                        <h4 style="color: rgb(var(--neon-gold));">Match</h4>
+                        <p>Team collaboration</p>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>📝 Active Courses</h3>
+                        <p><strong>Mathematics 201:</strong> Linear Algebra<br>
+                        <strong>Physics 301:</strong> Quantum Mechanics<br>
+                        <strong>CS 401:</strong> Machine Learning</p>
+                    </div>
+                    <div class="card">
+                        <h3>📊 Performance Metrics</h3>
+                        <p><strong>Assignments Completed:</strong> 42/45<br>
+                        <strong>Attendance Rate:</strong> 95%<br>
+                        <strong>Average Score:</strong> 88%</p>
+                    </div>
+                    <div class="card">
+                        <h3>📅 Upcoming Deadlines</h3>
+                        <p><strong>Math Assignment:</strong> Due in 2 days<br>
+                        <strong>Physics Lab Report:</strong> Due in 5 days<br>
+                        <strong>CS Project:</strong> Due in 7 days</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 20px;">📊 Course Performance</h3>
+                    <canvas id="courseChart"></canvas>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 WELLNESS CENTER SECTION
+                 ============================================ -->
+            <section id="wellnessSection" class="section">
+                <div class="dashboard-header">
+                    <h1>❤️ Wellness Center</h1>
+                    <p>Your mental and physical health matters</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>😊 Wellness Check-In</h3>
+                        <p>How are you feeling today?</p>
+                        <div class="wellness-mood-selector">
+                            <button class="mood-emoji-btn" onclick="triggerEmojiAnimation('great')" title="Great!">😊</button>
+                            <button class="mood-emoji-btn" onclick="triggerEmojiAnimation('okay')" title="Okay">😐</button>
+                            <button class="mood-emoji-btn" onclick="triggerEmojiAnimation('struggling')" title="Struggling">😟</button>
+                        </div>
+                        <p style="text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Click an emoji to express how you feel</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧠 Mental Health Resources</h3>
+                        <p>Access support when you need it</p>
+                        <div class="dropdown">
+                            <button class="dropdown-toggle" onclick="toggleDropdown('mentalHealthDropdown')">
+                                Resources ▼
+                            </button>
+                            <div class="dropdown-menu" id="mentalHealthDropdown">
+                                <a href="#" class="dropdown-item">📞 Counselling Services</a>
+                                <a href="#" class="dropdown-item">🧘 Stress Management Tips</a>
+                                <a href="#" class="dropdown-item" onclick="openModal('counselingModal')">📅 Book an Appointment</a>
+                                <a href="#" class="dropdown-item">🚨 Emergency Helplines</a>
+                                <a href="#" class="dropdown-item">📚 Wellness Articles</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📅 Book Counseling</h3>
+                        <p>Schedule a session with our wellness counselors</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('counselingModal')">Book Now</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧘 Wellness Activities</h3>
+                        <p><strong>Meditation:</strong> Daily at 7 AM<br>
+                        <strong>Yoga Class:</strong> Mon, Wed, Fri at 5 PM<br>
+                        <strong>Support Groups:</strong> Thursdays at 4 PM</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔥 Wellness Streak</h3>
+                        <div class="card-stat">7 Days</div>
+                        <p>Keep up the great work!</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 70%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 20px;">📈 Mood Trends</h3>
+                    <canvas id="moodChart"></canvas>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 CAREER PATHWAYS SECTION
+                 ============================================ -->
+            <section id="careerSection" class="section">
+                <div class="dashboard-header">
+                    <h1>💼 Career Pathways</h1>
+                    <p>Build your professional future</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>🎯 Career Events</h3>
+                        <p>Explore career opportunities and development</p>
+                        <div class="dropdown">
+                            <button class="dropdown-toggle" onclick="toggleDropdown('careerEventsDropdown')">
+                                Career Events ▼
+                            </button>
+                            <div class="dropdown-menu" id="careerEventsDropdown">
+                                <a href="#" class="dropdown-item">🌐 Virtual Career Fair</a>
+                                <a href="#" class="dropdown-item">🏢 Employer List</a>
+                                <a href="#" class="dropdown-item">📝 Resume Workshop</a>
+                                <a href="#" class="dropdown-item">🎤 Interview Prep</a>
+                                <a href="#" class="dropdown-item">🤝 Mentorship</a>
+                                <a href="#" class="dropdown-item">💼 Internship Openings</a>
+                                <a href="#" class="dropdown-item">🎮 Gamified Career Challenges</a>
+                                <a href="#" class="dropdown-item">🗺️ Career Path Simulator</a>
+                                <a href="#" class="dropdown-item">💬 Expert Chats</a>
+                                <a href="#" class="dropdown-item">👥 Peer Networking Lounge</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>👔 Career Counselor</h3>
+                        <p>Get expert guidance on your career path</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('careerCounselorModal')">Book Session</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>💼 Internship Board</h3>
+                        <p>Browse government and private internships</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('internshipModal')">View Internships</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🎯 Skill Building</h3>
+                        <p>Learn in-demand skills with roadmaps</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('skillBuildingModal')">Browse Skills</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🎤 Interview Prep Guide</h3>
+                        <p>Master interviews with structured guidance</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('interviewPrepModal')">Start Preparing</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🎓 Scholarships</h3>
+                        <p>Find funding opportunities</p>
+                        <div class="dropdown">
+                            <button class="dropdown-toggle" onclick="toggleDropdown('scholarshipsDropdown')">
+                                Scholarships ▼
+                            </button>
+                            <div class="dropdown-menu" id="scholarshipsDropdown">
+                                <a href="#" class="dropdown-item">🔍 Scholarship Search</a>
+                                <a href="#" class="dropdown-item">⏰ Deadlines</a>
+                                <a href="#" class="dropdown-item">📋 Application Tracker</a>
+                                <a href="#" class="dropdown-item">✅ Eligibility</a>
+                                <div class="dropdown-item-with-submenu">
+                                    <a href="#" class="dropdown-item">📂 Categories ▸</a>
+                                    <div class="dropdown-submenu">
+                                        <a href="#" class="dropdown-item">🏆 Merit</a>
+                                        <a href="#" class="dropdown-item">💰 Need-based</a>
+                                        <a href="#" class="dropdown-item">⚽ Sports</a>
+                                    </div>
+                                </div>
+                                <a href="#" class="dropdown-item">🏛️ Government Scholarships</a>
+                                <a href="#" class="dropdown-item">🏢 Private Scholarships</a>
+                                <a href="#" class="dropdown-item">❓ FAQ</a>
+                                <a href="#" class="dropdown-item">🤖 AI Chatbot <span class="dropdown-badge">NEW</span></a>
+                                <a href="#" class="dropdown-item">💰 Micro-scholarships <span class="dropdown-badge">HOT</span></a>
+                                <a href="#" class="dropdown-item">🎤 Events &amp; Webinars</a>
+                                <a href="#" class="dropdown-item">📊 Scholarship Calculator <span class="dropdown-badge">POPULAR</span></a>
+                                <a href="#" class="dropdown-item">🔔 Alerts &amp; Notifications</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 20px;">📊 Career Readiness Score</h3>
+                    <canvas id="careerChart"></canvas>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 APPOINTMENTS SECTION
+                 ============================================ -->
+            <section id="appointmentsSection" class="section">
+                <div class="dashboard-header">
+                    <h1>📅 Book Appointments</h1>
+                    <p>Schedule meetings with faculty and advisors</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>👨‍🏫 Faculty Appointments</h3>
+                        <p>Meet with your professors</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('facultyModal')">Book Now</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🎓 Academic Advisor</h3>
+                        <p>Plan your course schedule</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('advisorModal')">Book Now</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>💼 Career Counseling</h3>
+                        <p>Career guidance and planning</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('careerCounselorModal')">Book Now</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>❤️ Wellness Counseling</h3>
+                        <p>Mental health support</p>
+                        <button class="btn btn-full mt-20" onclick="openModal('counselingModal')">Book Now</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📅 Your Upcoming Appointments</h3>
+                    <p><strong>Math Professor:</strong> Tomorrow at 10:00 AM<br>
+                    <strong>Academic Advisor:</strong> Friday at 2:00 PM<br>
+                    <strong>Career Counselor:</strong> Next Monday at 11:00 AM</p>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 FINANCIAL AID SECTION
+                 ============================================ -->
+            <section id="financialSection" class="section">
+                <div class="dashboard-header">
+                    <h1>💰 Financial Aid &amp; Support</h1>
+                    <p>Comprehensive financial resources for students</p>
+                </div>
+
+                <div class="category-cards-grid">
+                    <!-- Emergency Fund (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('emergencyFundModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">🆘</span>
+                                <span>Emergency Fund</span>
+                            </div>
+                            <span id="emergencyFund-arrow">🔎</span>
+                        </div>
+                        <p>Quick financial assistance for emergencies</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('emergencyFundModal');">Open Emergency Fund</button>
+                        </div>
+                    </div>
+
+                    <!-- Financial Literacy (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('financialLiteracyModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">📚</span>
+                                <span>Financial Literacy</span>
+                            </div>
+                            <span id="financialLiteracy-arrow">🔎</span>
+                        </div>
+                        <p>Master your money management skills</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('financialLiteracyModal');">Open Financial Literacy</button>
+                        </div>
+                    </div>
+
+                    <!-- Education Loans (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('educationLoansModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">🎓</span>
+                                <span>Education Loans</span>
+                            </div>
+                            <span id="educationLoans-arrow">🔎</span>
+                        </div>
+                        <p>Compare and apply for student loans</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('educationLoansModal');">Open Loans</button>
+                        </div>
+                    </div>
+
+                    <!-- Scholarships (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('scholarshipDiscoveryModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">🏆</span>
+                                <span>Scholarships</span>
+                            </div>
+                            <span id="scholarships-arrow">🔎</span>
+                        </div>
+                        <p>Find and apply for scholarships</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('scholarshipDiscoveryModal');">Open Scholarships</button>
+                        </div>
+                    </div>
+
+                    <!-- Budget Tools (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('budgetPlannerModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">📊</span>
+                                <span>Budget Tools</span>
+                            </div>
+                            <span id="budgetTools-arrow">🔎</span>
+                        </div>
+                        <p>Track expenses and manage budget</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('budgetPlannerModal');">Open Budget Tools</button>
+                        </div>
+                    </div>
+
+                    <!-- Work-Study Programs (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('workStudyModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">💼</span>
+                                <span>Work-Study Programs</span>
+                            </div>
+                            <span id="workStudy-arrow">🔎</span>
+                        </div>
+                        <p>On-campus employment opportunities</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('workStudyModal');">Open Work-Study</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 STUDY GROUPS SECTION
+                 ============================================ -->
+            <section id="studyGroupsSection" class="section">
+                <div class="dashboard-header">
+                    <h1>📚 Study Groups</h1>
+                    <p>Learn Together, Grow Faster</p>
+                </div>
+
+                <div class="card">
+                    <h3>🔍 Browse Active Study Groups</h3>
+                    <p style="margin-bottom: 20px;">Join a vibrant community of learners!</p>
+                    
+                    <div class="group-card">
+                        <div class="group-header">
+                            <div>
+                                <h4 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Data Structures Mastery</h4>
+                                <p style="color: rgba(255, 255, 255, 0.7); margin: 0;">Computer Science</p>
+                            </div>
+                            <button class="btn">Join Group</button>
+                        </div>
+                        <p><span class="member-count">👥 12 members active now</span> • <strong>Level:</strong> Intermediate</p>
+                        <div>
+                            <span class="tag">#ProblemSolving</span>
+                            <span class="tag">#ExamPrep</span>
+                            <span class="tag">#ProjectHelp</span>
+                        </div>
+                        <p style="margin-top: 10px; color: rgba(255, 255, 255, 0.6);">⏰ Last activity: 2 hours ago</p>
+                    </div>
+
+                    <div class="group-card">
+                        <div class="group-header">
+                            <div>
+                                <h4 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Mathematics Bootcamp</h4>
+                                <p style="color: rgba(255, 255, 255, 0.7); margin: 0;">Engineering Mathematics</p>
+                            </div>
+                            <button class="btn">Join Group</button>
+                        </div>
+                        <p><span class="member-count">👥 8 members active now</span> • <strong>Level:</strong> Beginner</p>
+                        <div>
+                            <span class="tag">#Calculus</span>
+                            <span class="tag">#LinearAlgebra</span>
+                        </div>
+                        <p style="margin-top: 10px; color: rgba(255, 255, 255, 0.6);">⏰ Last activity: 30 mins ago</p>
+                    </div>
+
+                    <div class="group-card">
+                        <div class="group-header">
+                            <div>
+                                <h4 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Physics Lab Masters</h4>
+                                <p style="color: rgba(255, 255, 255, 0.7); margin: 0;">Quantum Mechanics</p>
+                            </div>
+                            <button class="btn">Join Group</button>
+                        </div>
+                        <p><span class="member-count">👥 15 members active now</span> • <strong>Level:</strong> Advanced</p>
+                        <div>
+                            <span class="tag">#Labs</span>
+                            <span class="tag">#Research</span>
+                            <span class="tag">#Theory</span>
+                        </div>
+                        <p style="margin-top: 10px; color: rgba(255, 255, 255, 0.6);">⏰ Last activity: 1 hour ago</p>
+                    </div>
+
+                    <button class="btn-primary btn-full mt-20" onclick="alert('Create New Group feature coming soon!')">➕ Create New Study Group</button>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PEER MENTORS SECTION
+                 ============================================ -->
+            <section id="mentorsSection" class="section">
+                <div class="dashboard-header">
+                    <h1>🌟 Peer Mentors</h1>
+                    <p>Get Guided by Your Peers</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="mentor-card">
+                        <div style="text-align: center;">
+                            <div class="mentor-avatar">👩‍💻</div>
+                            <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Priya Sharma</h3>
+                            <p><strong>CGPA:</strong> 9.2/10 • <strong>Rank:</strong> #1</p>
+                            <p class="rating">⭐⭐⭐⭐⭐ 4.9/5.0</p>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <strong>Specializations:</strong>
+                            <div>
+                                <span class="tag">Data Structures</span>
+                                <span class="tag">Algorithms</span>
+                                <span class="tag">Competitive Programming</span>
+                            </div>
+                        </div>
+                        <p>📱 Response Time: <strong>1 hour</strong></p>
+                        <p>💰 Rate: <strong style="color: rgb(var(--neon-green));">Free</strong></p>
+                        <div class="flex gap-10 mt-20">
+                            <button class="btn" style="flex: 1;">💬 Chat</button>
+                            <button class="btn" style="flex: 1;" onclick="openModal('bookMentorModal')">📅 Book</button>
+                        </div>
+                    </div>
+
+                    <div class="mentor-card">
+                        <div style="text-align: center;">
+                            <div class="mentor-avatar">👨‍💻</div>
+                            <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Rahul Patel</h3>
+                            <p><strong>CGPA:</strong> 8.8/10 • <strong>Rank:</strong> #3</p>
+                            <p class="rating">⭐⭐⭐⭐⭐ 4.7/5.0</p>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <strong>Specializations:</strong>
+                            <div>
+                                <span class="tag">Web Development</span>
+                                <span class="tag">React</span>
+                                <span class="tag">Node.js</span>
+                            </div>
+                        </div>
+                        <p>📱 Response Time: <strong>2 hours</strong></p>
+                        <p>💰 Rate: <strong>₹100/hour</strong></p>
+                        <div class="flex gap-10 mt-20">
+                            <button class="btn" style="flex: 1;">💬 Chat</button>
+                            <button class="btn" style="flex: 1;" onclick="openModal('bookMentorModal')">📅 Book</button>
+                        </div>
+                    </div>
+
+                    <div class="mentor-card">
+                        <div style="text-align: center;">
+                            <div class="mentor-avatar">👨‍🎓</div>
+                            <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Amit Singh</h3>
+                            <p><strong>CGPA:</strong> 9.0/10 • <strong>Rank:</strong> #2</p>
+                            <p class="rating">⭐⭐⭐⭐⭐ 4.8/5.0</p>
+                        </div>
+                        <div style="margin: 15px 0;">
+                            <strong>Specializations:</strong>
+                            <div>
+                                <span class="tag">Machine Learning</span>
+                                <span class="tag">Python</span>
+                                <span class="tag">Data Science</span>
+                            </div>
+                        </div>
+                        <p>📱 Response Time: <strong>30 mins</strong></p>
+                        <p>💰 Rate: <strong style="color: rgb(var(--neon-green));">Free</strong></p>
+                        <div class="flex gap-10 mt-20">
+                            <button class="btn" style="flex: 1;">💬 Chat</button>
+                            <button class="btn" style="flex: 1;" onclick="openModal('bookMentorModal')">📅 Book</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 COMMUNITY SECTION
+                 ============================================ -->
+            <section id="communitySection" class="section">
+                <div class="dashboard-header">
+                    <h1>👥 Community &amp; Networking</h1>
+                    <p>Connect with peers and mentors</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>📝 Create Post</h3>
+                        <textarea placeholder="Share your thoughts..." style="width: 100%; min-height: 80px; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff; margin-bottom: 10px;"></textarea>
+                        <button class="btn btn-full">Post</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🤝 Peer Mentors</h3>
+                        <p>Connect with experienced students</p>
+                        <button class="btn btn-full mt-20">Find Mentor</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🌐 Networking Events</h3>
+                        <p><strong>Tech Meetup:</strong> This Friday<br>
+                        <strong>Alumni Mixer:</strong> Next Week<br>
+                        <strong>Career Fair:</strong> March 15</p>
+                    </div>
+                </div>
+
+                <h2 style="color: rgb(var(--neon-cyan)); margin: 30px 0 20px;">💬 Discussion Forum - Global Learning Community</h2>
+
+                <div class="forum-container">
+                    <div class="forum-header">
+                        <div>
+                            <h3 style="margin: 0; color: rgb(var(--neon-cyan));">Active Discussions</h3>
+                            <p style="margin: 5px 0 0; color: rgba(255, 255, 255, 0.6);">Join the conversation with students worldwide</p>
+                        </div>
+                        <div class="online-users">
+                            <span style="color: rgb(var(--neon-green));">● 47 online</span>
+                            <div class="user-avatar-small">👤</div>
+                            <div class="user-avatar-small">👤</div>
+                            <div class="user-avatar-small">👤</div>
+                            <div class="user-avatar-small">👤</div>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <button class="filter-btn active">#General Questions</button>
+                        <button class="filter-btn">#Project Help</button>
+                        <button class="filter-btn">#Exam Tips</button>
+                        <button class="filter-btn">#Resource Sharing</button>
+                        <button class="filter-btn">#Tech Troubleshooting</button>
+                        <button class="filter-btn">#Off-Topic</button>
+                    </div>
+
+                    <div class="thread">
+                        <div class="thread-header">
+                            <div>
+                                <strong style="color: rgb(var(--neon-cyan));">How to optimize React performance?</strong>
+                                <p style="margin: 5px 0 0; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Posted by @sarah_dev • 2 hours ago</p>
+                            </div>
+                            <span style="color: rgb(var(--neon-green));">🔥 Popular</span>
+                        </div>
+                        <p>I'm working on a large React app and noticing performance issues. What are the best practices for optimization?</p>
+                        <div class="vote-buttons">
+                            <button class="vote-btn">👍 Upvote (24)</button>
+                            <button class="vote-btn">💬 12 Replies</button>
+                            <button class="vote-btn">🔗 Share</button>
+                        </div>
+                    </div>
+
+                    <div class="thread">
+                        <div class="thread-header">
+                            <div>
+                                <strong style="color: rgb(var(--neon-cyan));">Study group for Machine Learning - Join us!</strong>
+                                <p style="margin: 5px 0 0; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Posted by @ml_enthusiast • 4 hours ago</p>
+                            </div>
+                        </div>
+                        <p>Starting a study group for Andrew Ng's ML course. Meeting every Tuesday at 7 PM. DM if interested!</p>
+                        <div class="vote-buttons">
+                            <button class="vote-btn">👍 Upvote (18)</button>
+                            <button class="vote-btn">💬 8 Replies</button>
+                            <button class="vote-btn">🔗 Share</button>
+                        </div>
+                    </div>
+
+                    <div class="thread">
+                        <div class="thread-header">
+                            <div>
+                                <strong style="color: rgb(var(--neon-cyan));">Best resources for Data Structures interview prep?</strong>
+                                <p style="margin: 5px 0 0; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Posted by @code_ninja • 6 hours ago</p>
+                            </div>
+                        </div>
+                        <p>Preparing for technical interviews. What are your favorite resources for DS&A?</p>
+                        <div class="vote-buttons">
+                            <button class="vote-btn">👍 Upvote (35)</button>
+                            <button class="vote-btn">💬 15 Replies</button>
+                            <button class="vote-btn">🔗 Share</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 style="color: rgb(var(--neon-cyan)); margin: 30px 0 20px;">📝 Community Posts</h2>
+
+                <div class="post">
+                    <div class="post-header">
+                        <div class="post-avatar">👨</div>
+                        <div class="post-info">
+                            <h4>Alex Johnson</h4>
+                            <span>2 hours ago</span>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        Looking for study partners for Quantum Mechanics. Anyone interested in forming a study group?
+                    </div>
+                    <div class="post-actions">
+                        <button>👍 Like (24)</button>
+                        <button>💬 Comment (8)</button>
+                        <button>🔗 Share</button>
+                    </div>
+                </div>
+
+                <div class="post">
+                    <div class="post-header">
+                        <div class="post-avatar">👩</div>
+                        <div class="post-info">
+                            <h4>Sarah Martinez</h4>
+                            <span>5 hours ago</span>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        Great resources for Machine Learning projects! Check out this GitHub repo with tons of datasets and tutorials.
+                    </div>
+                    <div class="post-actions">
+                        <button>👍 Like (42)</button>
+                        <button>💬 Comment (15)</button>
+                        <button>🔗 Share</button>
+                    </div>
+                </div>
+
+                <div class="post">
+                    <div class="post-header">
+                        <div class="post-avatar">👨</div>
+                        <div class="post-info">
+                            <h4>Michael Chen</h4>
+                            <span>1 day ago</span>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        Just landed my dream internship at Google! Thank you to all the mentors and the career services team for your support!
+                    </div>
+                    <div class="post-actions">
+                        <button>👍 Like (156)</button>
+                        <button>💬 Comment (42)</button>
+                        <button>🔗 Share</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 FINANCIAL LITERACY SECTION
+                 ============================================ -->
+            <section id="financialLiteracySection" class="section">
+                <div class="dashboard-header">
+                    <h1>📊 Financial Literacy Hub</h1>
+                    <p>Master Your Money - Build Your Future</p>
+                </div>
+
+                <div class="financial-module">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">💰 Module 1: Budgeting Basics</h3>
+                    <ul style="line-height: 2;">
+                        <li><strong>Needs vs. Wants:</strong> Learn to distinguish essential expenses from discretionary spending</li>
+                        <li><strong>The 50/30/20 Rule:</strong> 50% Needs, 30% Wants, 20% Savings</li>
+                        <li><strong>Student Budget Template:</strong> Track tuition, books, rent, food, and entertainment</li>
+                    </ul>
+                </div>
+
+                <div class="financial-module">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">🎯 Module 2: Saving and Goal Setting</h3>
+                    <ul style="line-height: 2;">
+                        <li><strong>Compound Interest:</strong> Your money grows exponentially over time</li>
+                        <li><strong>SMART Goals:</strong> Specific, Measurable, Achievable, Relevant, Time-bound</li>
+                        <li><strong>Emergency Fund:</strong> Build 3-6 months of expenses for unexpected situations</li>
+                    </ul>
+                </div>
+
+                <div class="financial-module">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">🏦 Module 3: Banking Basics</h3>
+                    <ul style="line-height: 2;">
+                        <li><strong>Checking vs. Savings:</strong> Checking for daily use, Savings for long-term goals</li>
+                        <li><strong>Digital Payments:</strong> Understanding debit cards, UPI, mobile wallets</li>
+                        <li><strong>Avoid Fees:</strong> Maintain minimum balance, use in-network ATMs</li>
+                    </ul>
+                </div>
+
+                <div class="financial-module">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">💳 Module 4: Debt and Credit</h3>
+                    <ul style="line-height: 2;">
+                        <li><strong>Student Loans:</strong> Understand interest rates, grace periods, repayment options</li>
+                        <li><strong>Credit Score:</strong> 300-850 range, impacts future loans and rentals</li>
+                        <li><strong>Responsible Credit Use:</strong> Pay on time, keep balances low, avoid multiple cards</li>
+                    </ul>
+                </div>
+
+                <h2 style="color: rgb(var(--neon-cyan)); margin: 30px 0 20px;">🛠️ Interactive Financial Tools</h2>
+
+                <div class="cards-grid">
+                    <div class="card calculator-tool">
+                        <h3>💰 Budget Calculator</h3>
+                        <div class="form-group">
+                            <label>Monthly Income ($)</label>
+                            <input type="number" id="budgetIncome" placeholder="2000" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        </div>
+                        <div class="form-group">
+                            <label>Monthly Expenses ($)</label>
+                            <input type="number" id="budgetExpenses" placeholder="1500" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        </div>
+                        <button class="btn btn-full" onclick="calculateBudget()">Calculate</button>
+                        <div class="calculator-result" id="budgetResult" style="display: none;"></div>
+                    </div>
+
+                    <div class="card calculator-tool">
+                        <h3>🎓 Cost of College Planner</h3>
+                        <div class="form-group">
+                            <label>Annual Tuition ($)</label>
+                            <input type="number" id="collegeTuition" placeholder="15000" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        </div>
+                        <div class="form-group">
+                            <label>Years</label>
+                            <input type="number" id="collegeYears" placeholder="4" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        </div>
+                        <button class="btn btn-full" onclick="calculateCollege()">Calculate</button>
+                        <div class="calculator-result" id="collegeResult" style="display: none;"></div>
+                    </div>
+
+                    <div class="card calculator-tool">
+                        <h3>💡 What If Scenarios</h3>
+                        <div class="form-group">
+                            <label>Monthly Savings ($)</label>
+                            <input type="number" id="savingsAmount" placeholder="50" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        </div>
+                        <div class="form-group">
+                            <label>Months</label>
+                            <input type="number" id="savingsMonths" placeholder="12" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        </div>
+                        <button class="btn btn-full" onclick="calculateSavings()">Calculate</button>
+                        <div class="calculator-result" id="savingsResult" style="display: none;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 E-LIBRARY SECTION
+                 ============================================ -->
+            <section id="librarySection" class="section">
+                <div class="dashboard-header">
+                    <h1>📖 E-Library &amp; Resources</h1>
+                    <p>Access academic materials and study resources</p>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>📚 Digital Books</h3>
+                        <p>Access thousands of textbooks and references</p>
+                        <button class="btn btn-full mt-20">Browse Library</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>📄 Research Papers</h3>
+                        <p>Academic journals and publications</p>
+                        <button class="btn btn-full mt-20">Search Papers</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🎥 Video Lectures</h3>
+                        <p>Recorded lectures and tutorials</p>
+                        <button class="btn btn-full mt-20">Watch Now</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>📝 Study Guides</h3>
+                        <p>Exam preparation materials</p>
+                        <button class="btn btn-full mt-20">View Guides</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>💻 Online Courses</h3>
+                        <p>Free courses from top universities</p>
+                        <button class="btn btn-full mt-20">Explore Courses</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔬 Lab Simulations</h3>
+                        <p>Virtual lab experiments</p>
+                        <button class="btn btn-full mt-20">Start Simulation</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📖 Recently Accessed</h3>
+                    <p><strong>Linear Algebra - 4th Edition</strong><br>
+                    <strong>Quantum Mechanics Fundamentals</strong><br>
+                    <strong>Introduction to Machine Learning</strong></p>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 CAMPUS MAPS SECTION
+                 ============================================ -->
+            <section id="campusSection" class="section">
+                <div class="dashboard-header">
+                    <h1>🗺️ Campus Maps &amp; Navigation</h1>
+                    <p>Find your way around campus</p>
+                </div>
+
+                <div class="card">
+                    <h3>🗺️ Interactive Campus Map</h3>
+                    <div style="background: rgba(var(--dark-bg), 0.6); height: 400px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-top: 20px; border: 1px solid rgba(var(--neon-cyan), 0.3);">
+                        <p style="color: rgba(255, 255, 255, 0.6); font-size: 1.2rem;">🗺️ Interactive Map Display</p>
+                    </div>
+                </div>
+
+                <div class="cards-grid mt-20">
+                    <div class="card">
+                        <h3>🏢 Main Buildings</h3>
+                        <p><strong>Library:</strong> Building A<br>
+                        <strong>Science Labs:</strong> Building B<br>
+                        <strong>Engineering:</strong> Building C</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>🍽️ Dining Halls</h3>
+                        <p><strong>Main Cafeteria:</strong> Student Center<br>
+                        <strong>Coffee Shop:</strong> Library Ground Floor<br>
+                        <strong>Food Court:</strong> East Campus</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>🏃 Recreation</h3>
+                        <p><strong>Gym:</strong> Sports Complex<br>
+                        <strong>Pool:</strong> Recreation Center<br>
+                        <strong>Tennis Courts:</strong> East Campus</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>🚗 Parking</h3>
+                        <p><strong>Student Lot A:</strong> North Campus<br>
+                        <strong>Student Lot B:</strong> South Campus<br>
+                        <strong>Visitor Parking:</strong> Main Entrance</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 SETTINGS SECTION
+                 ============================================ -->
+            <section id="settingsSection" class="section">
+                <div class="dashboard-header">
+                    <h1>⚙️ Settings &amp; Preferences</h1>
+                    <p>Customize your experience with interactive settings</p>
+                </div>
+
+                <div class="category-cards-grid">
+                    <!-- Profile Settings (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('profileSettingsModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">👤</span>
+                                <span>Profile Settings</span>
+                            </div>
+                            <span id="profileSettings-arrow">🔎</span>
+                        </div>
+                        <p>Manage your personal information and goals</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('profileSettingsModal');">Open Profile Settings</button>
+                        </div>
+                    </div>
+
+                    <!-- Notifications (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('notificationsSettingsModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">🔔</span>
+                                <span>Notifications</span>
+                            </div>
+                            <span id="notificationsSettings-arrow">🔎</span>
+                        </div>
+                        <p>Configure your notification preferences</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('notificationsSettingsModal');">Open Notifications</button>
+                        </div>
+                    </div>
+
+                    <!-- Privacy & Security (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('privacySettingsModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">🔒</span>
+                                <span>Privacy &amp; Security</span>
+                            </div>
+                            <span id="privacySettings-arrow">🔎</span>
+                        </div>
+                        <p>Protect your data and manage security</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('privacySettingsModal');">Open Privacy & Security</button>
+                        </div>
+                    </div>
+
+                    <!-- Appearance (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('appearanceSettingsModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">🌓</span>
+                                <span>Appearance</span>
+                            </div>
+                            <span id="appearanceSettings-arrow">🔎</span>
+                        </div>
+                        <p>Customize your visual experience</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('appearanceSettingsModal');">Open Appearance</button>
+                        </div>
+                    </div>
+
+                    <!-- Connected Devices (opens modal instead of dropdown) -->
+                    <div class="category-card" onclick="openModal('devicesSettingsModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">💻</span>
+                                <span>Connected Devices</span>
+                            </div>
+                            <span id="devicesSettings-arrow">🔎</span>
+                        </div>
+                        <p>Manage your logged-in devices</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('devicesSettingsModal');">Open Devices</button>
+                        </div>
+                    </div>
+
+                    <!-- Language -->
+                    <div class="category-card" onclick="openModal('languageSettingsModal')">
+                        <div class="category-card-header">
+                            <div class="category-card-title">
+                                <span class="category-card-icon">🌐</span>
+                                <span>Language</span>
+                            </div>
+                            <span id="languageSettings-arrow">🔎</span>
+                        </div>
+                        <p>Multilingual support and preferences</p>
+                        <div class="category-actions">
+                            <button class="btn" onclick="event.stopPropagation(); openModal('languageSettingsModal');">Open Language Settings</button>
+                        </div>
+                    </div>
+                                <button class="feature-action" onclick="event.stopPropagation(); alert('Preview Mode');">Preview</button>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">💡</span>
+                                <div class="feature-content">
+                                    <div class="feature-title">Regional Study Tips</div>
+                                    <div class="feature-desc">Country-specific study advice</div>
+                                </div>
+                                <button class="feature-action" onclick="event.stopPropagation(); alert('Regional Tips');">View</button>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📚</span>
+                                <div class="feature-content">
+                                    <div class="feature-title">Language Learning</div>
+                                    <div class="feature-desc">Learn words in different languages</div>
+                                </div>
+                                <button class="feature-action" onclick="event.stopPropagation(); alert('Language Learning mode');">Start</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Emoji Animation Overlay -->
+    <div id="emojiOverlay" class="emoji-animation-overlay"></div>
+
+    <!-- Info Bubbles Showcase (Optional - can be added to any section) -->
+    <div class="info-bubbles-container hidden" id="infoBubbles">
+        <div class="info-bubble">🎓 AI-Powered Digital Platform</div>
+        <div class="info-bubble">📝 Digital Requests</div>
+        <div class="info-bubble">🏆 Scholarships Hub</div>
+        <div class="info-bubble">❤️ Wellness First</div>
+        <div class="info-bubble">💼 Career Pathways</div>
+    </div>
+
+    <!-- ============================================
+         MODALS
+         ============================================ -->
+    
+    <!-- Generic Modal for Learning Modes -->
+    <div id="learnModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📖 Learn Mode</h2>
+                <button class="modal-close" onclick="closeModal('learnModal')">&times;</button>
+            </div>
+            <p>Interactive learning content will appear here. Study with flashcards, summaries, and detailed explanations.</p>
+            <button class="btn btn-full mt-20" onclick="closeModal('learnModal')">Close</button>
+        </div>
+    </div>
+
+    <div id="quizModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>❓ Quiz Mode</h2>
+                <button class="modal-close" onclick="closeModal('quizModal')">&times;</button>
+            </div>
+            <p>Test your knowledge with interactive quizzes. Multiple choice, true/false, and open-ended questions.</p>
+            <button class="btn btn-full mt-20" onclick="closeModal('quizModal')">Close</button>
+        </div>
+    </div>
+
+    <div id="raceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏁 Race Mode</h2>
+                <button class="modal-close" onclick="closeModal('raceModal')">&times;</button>
+            </div>
+            <p>Compete against the clock! Answer questions quickly to improve your score and ranking.</p>
+            <button class="btn btn-full mt-20" onclick="closeModal('raceModal')">Close</button>
+        </div>
+    </div>
+
+    <div id="matchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎯 Match Mode</h2>
+                <button class="modal-close" onclick="closeModal('matchModal')">&times;</button>
+            </div>
+            <p>Match terms with definitions, concepts with examples, and more in this engaging card game.</p>
+            <button class="btn btn-full mt-20" onclick="closeModal('matchModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Counseling Modal -->
+    <div id="counselingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📅 Book Counseling Session</h2>
+                <button class="modal-close" onclick="closeModal('counselingModal')">&times;</button>
+            </div>
+            <form onsubmit="handleCounselingBooking(event)">
+                <div class="form-group">
+                    <label>Preferred Date</label>
+                    <input type="date" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Preferred Time</label>
+                    <input type="time" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Reason for Session</label>
+                    <textarea required style="width: 100%; min-height: 80px; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;"></textarea>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Career Counselor Modal -->
+    <div id="careerCounselorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💼 Book Career Counseling</h2>
+                <button class="modal-close" onclick="closeModal('careerCounselorModal')">&times;</button>
+            </div>
+            <form onsubmit="handleCareerBooking(event)">
+                <div class="form-group">
+                    <label>Preferred Date</label>
+                    <input type="date" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Preferred Time</label>
+                    <input type="time" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Career Interest</label>
+                    <select required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        <option value="">Select an option</option>
+                        <option>Software Engineering</option>
+                        <option>Data Science</option>
+                        <option>UX/UI Design</option>
+                        <option>Business Analytics</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Faculty Appointment Modal -->
+    <div id="facultyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👨‍🏫 Book Faculty Appointment</h2>
+                <button class="modal-close" onclick="closeModal('facultyModal')">&times;</button>
+            </div>
+            <form onsubmit="handleFacultyBooking(event)">
+                <div class="form-group">
+                    <label>Select Faculty</label>
+                    <select required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        <option value="">Select a professor</option>
+                        <option>Prof. Smith - Mathematics</option>
+                        <option>Prof. Johnson - Physics</option>
+                        <option>Prof. Williams - Computer Science</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Date</label>
+                    <input type="date" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Preferred Time</label>
+                    <input type="time" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <button type="submit" class="btn-primary btn-full">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Advisor Modal -->
+    <div id="advisorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎓 Book Academic Advisor</h2>
+                <button class="modal-close" onclick="closeModal('advisorModal')">&times;</button>
+            </div>
+            <form onsubmit="handleAdvisorBooking(event)">
+                <div class="form-group">
+                    <label>Preferred Date</label>
+                    <input type="date" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Preferred Time</label>
+                    <input type="time" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Topic</label>
+                    <select required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        <option value="">Select a topic</option>
+                        <option>Course Selection</option>
+                        <option>Major Change</option>
+                        <option>Academic Planning</option>
+                        <option>Graduation Requirements</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scholarship Discovery Modal -->
+    <div id="scholarshipDiscoveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏆 Find Scholarships</h2>
+                <button class="modal-close" onclick="closeModal('scholarshipDiscoveryModal')">&times;</button>
+            </div>
+            
+            <div class="scholarship-category">
+                <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">🏛️ Government Funded Scholarships</h3>
+                
+                <div class="scholarship-item">
+                    <h4>State Government Merit Scholarship</h4>
+                    <p><strong>Last Date:</strong> December 31, 2025</p>
+                    <p><strong>Eligibility:</strong> CGPA ≥ 8.5, State resident</p>
+                    <p><strong>Amount:</strong> $2,000/year</p>
+                    <button class="btn">Apply Now</button>
+                </div>
+
+                <div class="scholarship-item">
+                    <h4>National Science Foundation Grant</h4>
+                    <p><strong>Last Date:</strong> January 15, 2026</p>
+                    <p><strong>Eligibility:</strong> STEM major, Research proposal required</p>
+                    <p><strong>Amount:</strong> $5,000/year</p>
+                    <button class="btn">Apply Now</button>
+                </div>
+            </div>
+
+            <div class="scholarship-category">
+                <h3 style="color: rgb(var(--neon-pink)); margin-bottom: 15px;">🏢 Private Funded Scholarships</h3>
+                
+                <div class="scholarship-item">
+                    <h4>TechCorp Innovation Scholarship</h4>
+                    <p><strong>Last Date:</strong> November 30, 2025</p>
+                    <p><strong>Eligibility:</strong> Computer Science major, Portfolio required</p>
+                    <p><strong>Amount:</strong> $3,500/year</p>
+                    <button class="btn">Apply Now</button>
+                </div>
+
+                <div class="scholarship-item">
+                    <h4>Global Leaders Scholarship Fund</h4>
+                    <p><strong>Last Date:</strong> March 1, 2026</p>
+                    <p><strong>Eligibility:</strong> Leadership experience, Essay required</p>
+                    <p><strong>Amount:</strong> $4,000/year</p>
+                    <button class="btn">Apply Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Education Loans Modal -->
+    <div id="educationLoansModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎓 Education Loans Comparison</h2>
+                <button class="modal-close" onclick="closeModal('educationLoansModal')">&times;</button>
+            </div>
+            
+            <table class="loan-comparison-table">
+                <thead>
+                    <tr>
+                        <th>Bank Name</th>
+                        <th>Interest Rate</th>
+                        <th>Max Loan Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Apex Financial Bank</td>
+                        <td>8.5% per annum</td>
+                        <td>$50,000</td>
+                        <td><button class="btn">Apply</button></td>
+                    </tr>
+                    <tr>
+                        <td>Student Growth Corporation</td>
+                        <td>7.9% per annum</td>
+                        <td>$80,000</td>
+                        <td><button class="btn">Apply</button></td>
+                    </tr>
+                    <tr>
+                        <td>Education First Bank</td>
+                        <td>9.1% per annum</td>
+                        <td>$60,000</td>
+                        <td><button class="btn">Apply</button></td>
+                    </tr>
+                    <tr>
+                        <td>Future Finance Ltd.</td>
+                        <td>8.2% per annum</td>
+                        <td>$75,000</td>
+                        <td><button class="btn">Apply</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 20px; color: rgba(255, 255, 255, 0.7);">* Interest rates are subject to credit evaluation and market conditions</p>
+        </div>
+    </div>
+
+    <!-- Internship Board Modal -->
+    <div id="internshipModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>💼 Internship Board</h2>
+                <button class="modal-close" onclick="closeModal('internshipModal')">&times;</button>
+            </div>
+            
+            <div class="filter-section">
+                <button class="filter-btn active" onclick="filterInternships('all')">All</button>
+                <button class="filter-btn" onclick="filterInternships('Tech')">Tech</button>
+                <button class="filter-btn" onclick="filterInternships('Design')">Design</button>
+                <button class="filter-btn" onclick="filterInternships('Marketing')">Marketing</button>
+                <button class="filter-btn" onclick="filterInternships('Remote')">Remote</button>
+            </div>
+
+            <h3 style="color: rgb(var(--neon-cyan)); margin: 20px 0 15px;">🏛️ Government Internships</h3>
+            
+            <div class="internship-card" data-domain="Tech" data-mode="On-site">
+                <h4 style="color: rgb(var(--neon-cyan));">Frontend Developer Intern</h4>
+                <p><strong>Organization:</strong> Ministry of IT - Digital India Initiative</p>
+                <p><strong>Location:</strong> New Delhi • <strong>Mode:</strong> On-site</p>
+                <p><span class="internship-type-badge badge-stipend">Stipend: ₹5,000/month</span></p>
+                <button class="btn-primary" style="margin-top: 10px;">Apply Now</button>
+            </div>
+
+            <div class="internship-card" data-domain="Data" data-mode="Hybrid">
+                <h4 style="color: rgb(var(--neon-cyan));">Data Analyst Intern</h4>
+                <p><strong>Organization:</strong> Census Bureau - Statistics Division</p>
+                <p><strong>Location:</strong> Mumbai • <strong>Mode:</strong> Hybrid</p>
+                <p><span class="internship-type-badge badge-paid">Paid: ₹8,000/month</span></p>
+                <button class="btn-primary" style="margin-top: 10px;">Apply Now</button>
+            </div>
+
+            <h3 style="color: rgb(var(--neon-pink)); margin: 20px 0 15px;">🏢 Private Internships</h3>
+            
+            <div class="internship-card" data-domain="Design" data-mode="Remote">
+                <h4 style="color: rgb(var(--neon-cyan));">UX Designer Intern</h4>
+                <p><strong>Company:</strong> TechStart Solutions</p>
+                <p><strong>Location:</strong> Bangalore • <strong>Mode:</strong> Remote</p>
+                <p><span class="internship-type-badge badge-paid">Paid: ₹12,000/month</span></p>
+                <button class="btn-primary" style="margin-top: 10px;">Apply Now</button>
+            </div>
+
+            <div class="internship-card" data-domain="Marketing" data-mode="Remote">
+                <h4 style="color: rgb(var(--neon-cyan));">Digital Marketing Intern</h4>
+                <p><strong>Company:</strong> Digital Marketing Pro</p>
+                <p><strong>Location:</strong> All India • <strong>Mode:</strong> Remote</p>
+                <p><span class="internship-type-badge badge-unpaid">Unpaid</span></p>
+                <button class="btn-primary" style="margin-top: 10px;">Apply Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skill Building Modal -->
+    <div id="skillBuildingModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>🎯 Skill Building</h2>
+                <button class="modal-close" onclick="closeModal('skillBuildingModal')">&times;</button>
+            </div>
+            
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>🐍 Python Programming</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <p><strong>About:</strong> Master Python, one of the most versatile programming languages used in web development, data science, AI, and automation.</p>
+                    <p><strong>Importance:</strong> High demand in tech industry</p>
+                    <p><strong>Duration:</strong> 6 weeks at 1 hour/day</p>
+                    <div style="margin-top: 15px;">
+                        <strong>Learning Roadmap:</strong>
+                        <div class="roadmap-step">Week 1-2: Basics &amp; Syntax</div>
+                        <div class="roadmap-step">Week 3-4: OOP Concepts</div>
+                        <div class="roadmap-step">Week 5: Popular Libraries</div>
+                        <div class="roadmap-step">Week 6: Capstone Project</div>
+                    </div>
+                    <button class="btn-primary btn-full mt-20">Start Learning</button>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>🎨 UI/UX Design</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <p><strong>About:</strong> Learn to create beautiful, user-friendly interfaces that people love to use.</p>
+                    <p><strong>Importance:</strong> Critical for product success</p>
+                    <p><strong>Duration:</strong> 4 weeks at 1 hour/day</p>
+                    <div style="margin-top: 15px;">
+                        <strong>Learning Roadmap:</strong>
+                        <div class="roadmap-step">Week 1: Design Principles</div>
+                        <div class="roadmap-step">Week 2: Tools (Figma, Adobe XD)</div>
+                        <div class="roadmap-step">Week 3: Wireframing</div>
+                        <div class="roadmap-step">Week 4: Prototyping</div>
+                    </div>
+                    <button class="btn-primary btn-full mt-20">Start Learning</button>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>📱 Digital Marketing</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <p><strong>About:</strong> Master modern marketing strategies for the digital age.</p>
+                    <p><strong>Importance:</strong> Essential for business growth</p>
+                    <p><strong>Duration:</strong> 5 weeks at 1 hour/day</p>
+                    <div style="margin-top: 15px;">
+                        <strong>Learning Roadmap:</strong>
+                        <div class="roadmap-step">Week 1: Social Media Marketing</div>
+                        <div class="roadmap-step">Week 2-3: SEO Fundamentals</div>
+                        <div class="roadmap-step">Week 4: Analytics &amp; Metrics</div>
+                        <div class="roadmap-step">Week 5: Campaign Planning</div>
+                    </div>
+                    <button class="btn-primary btn-full mt-20">Start Learning</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interview Prep Modal -->
+    <div id="interviewPrepModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>🎤 Interview Preparation Guide</h2>
+                <button class="modal-close" onclick="closeModal('interviewPrepModal')">&times;</button>
+            </div>
+            
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>🎯 Before the Interview</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <ul style="line-height: 1.8;">
+                        <li>✅ Update and polish your resume</li>
+                        <li>✅ Research the company thoroughly</li>
+                        <li>✅ Practice common interview questions</li>
+                        <li>✅ Prepare your own questions to ask</li>
+                        <li>✅ Choose professional attire</li>
+                        <li>✅ Get a good night's sleep</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>💬 During the Interview</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <ul style="line-height: 1.8;">
+                        <li>✅ Arrive 10-15 minutes early</li>
+                        <li>✅ Maintain good eye contact</li>
+                        <li>✅ Use the STAR method for behavioral questions</li>
+                        <li>✅ Be authentic and confident</li>
+                        <li>✅ Ask thoughtful questions</li>
+                        <li>✅ Take notes if appropriate</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Common Q&amp;A:</strong></p>
+                    <p style="margin-left: 15px;">"Tell me about yourself" → Brief professional summary<br>
+                    "Why this company?" → Show research &amp; alignment<br>
+                    "Strengths/Weaknesses" → Be honest with growth mindset</p>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>🧾 After the Interview</span>
+                    <span>▼</span>
+                </div>
+                <div class="accordion-content">
+                    <ul style="line-height: 1.8;">
+                        <li>✅ Send thank-you email within 24 hours</li>
+                        <li>✅ Reflect on your performance</li>
+                        <li>✅ Follow up if you don't hear back in 1-2 weeks</li>
+                        <li>✅ Stay positive regardless of outcome</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Thank-You Email Template:</strong></p>
+                    <p style="background: rgba(var(--dark-bg), 0.5); padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.9rem;">
+                    "Dear [Interviewer Name],<br><br>
+                    Thank you for taking the time to meet with me today. I enjoyed learning more about [position] and [company]. I'm excited about the opportunity to contribute to [specific project/goal discussed].<br><br>
+                    Best regards,<br>
+                    [Your Name]"
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn-primary btn-full mt-20" onclick="alert('Mock Interview feature coming soon!')">🎥 Take a Mock Interview</button>
+        </div>
+    </div>
+
+    <!-- Budget Planner Modal -->
+    <div id="budgetPlannerModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>📋 My Budget Planner</h2>
+                <button class="modal-close" onclick="closeModal('budgetPlannerModal')">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Total Monthly Income ($)</label>
+                <input type="number" id="budgetIncomeInput" placeholder="2000" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+            </div>
+
+            <h3 style="color: rgb(var(--neon-cyan)); margin: 20px 0 15px;">Monthly Expenses</h3>
+            <div class="expense-input-group">
+                <div class="form-group">
+                    <label>Rent ($)</label>
+                    <input type="number" id="expenseRent" placeholder="500" class="expense-input" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Food ($)</label>
+                    <input type="number" id="expenseFood" placeholder="300" class="expense-input" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Transport ($)</label>
+                    <input type="number" id="expenseTransport" placeholder="100" class="expense-input" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Entertainment ($)</label>
+                    <input type="number" id="expenseEntertainment" placeholder="150" class="expense-input" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Utilities ($)</label>
+                    <input type="number" id="expenseUtilities" placeholder="80" class="expense-input" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Other ($)</label>
+                    <input type="number" id="expenseOther" placeholder="70" class="expense-input" style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+            </div>
+
+            <button class="btn-primary btn-full" onclick="calculateDetailedBudget()">Calculate Budget</button>
+
+            <div id="budgetResultSection" style="display: none;">
+                <div class="budget-result-box" id="budgetResultBox">
+                    <h3>Remaining Budget</h3>
+                    <div id="budgetResultAmount" style="font-size: 2.5rem; font-weight: bold; margin: 15px 0;"></div>
+                </div>
+
+                <div class="budget-chart-container">
+                    <canvas id="budgetPieChart"></canvas>
+                </div>
+
+                <div id="budgetTipBox" class="budget-tip"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work-Study Jobs Modal -->
+    <div id="workStudyModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>💼 On-Campus Job Listings</h2>
+                <button class="modal-close" onclick="closeModal('workStudyModal')">&times;</button>
+            </div>
+
+            <div class="job-filters">
+                <button class="filter-btn active" onclick="filterJobs('all')">All Jobs</button>
+                <button class="filter-btn" onclick="filterJobs('Library')">Library</button>
+                <button class="filter-btn" onclick="filterJobs('Admissions')">Admissions</button>
+                <button class="filter-btn" onclick="filterJobs('Science')">Science</button>
+                <button class="filter-btn" onclick="filterJobs('high-pay')">High Pay</button>
+            </div>
+
+            <div id="jobListingsContainer">
+                <div class="job-card" data-dept="Library" data-pay="15">
+                    <div class="job-card-header">
+                        <div>
+                            <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Library Assistant</h3>
+                            <p style="color: rgba(255, 255, 255, 0.7);">Library Services Department</p>
+                        </div>
+                        <button class="btn-primary" onclick="applyForJob('Library Assistant')">Apply Now</button>
+                    </div>
+                    <div class="job-details">
+                        <div class="job-detail-item">
+                            <strong>💵 Pay Rate:</strong><br>$15/hour
+                        </div>
+                        <div class="job-detail-item">
+                            <strong>⏰ Hours:</strong><br>10 hours/week
+                        </div>
+                        <div class="job-detail-item">
+                            <strong>📅 Duration:</strong><br>Semester
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px;"><strong>Description:</strong> Help organize books, assist students with research, manage circulation desk.</p>
+                </div>
+
+                <div class="job-card" data-dept="Admissions" data-pay="14">
+                    <div class="job-card-header">
+                        <div>
+                            <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Campus Tour Guide</h3>
+                            <p style="color: rgba(255, 255, 255, 0.7);">Admissions Office</p>
+                        </div>
+                        <button class="btn-primary" onclick="applyForJob('Campus Tour Guide')">Apply Now</button>
+                    </div>
+                    <div class="job-details">
+                        <div class="job-detail-item">
+                            <strong>💵 Pay Rate:</strong><br>$14/hour
+                        </div>
+                        <div class="job-detail-item">
+                            <strong>⏰ Hours:</strong><br>8 hours/week
+                        </div>
+                        <div class="job-detail-item">
+                            <strong>📅 Duration:</strong><br>Academic Year
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px;"><strong>Description:</strong> Conduct campus tours for prospective students and families, answer questions about university life.</p>
+                </div>
+
+                <div class="job-card" data-dept="Science" data-pay="16">
+                    <div class="job-card-header">
+                        <div>
+                            <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 5px;">Research Assistant</h3>
+                            <p style="color: rgba(255, 255, 255, 0.7);">Science Department</p>
+                        </div>
+                        <button class="btn-primary" onclick="applyForJob('Research Assistant')">Apply Now</button>
+                    </div>
+                    <div class="job-details">
+                        <div class="job-detail-item">
+                            <strong>💵 Pay Rate:</strong><br>$16/hour
+                        </div>
+                        <div class="job-detail-item">
+                            <strong>⏰ Hours:</strong><br>12 hours/week
+                        </div>
+                        <div class="job-detail-item">
+                            <strong>📅 Duration:</strong><br>Flexible
+                        </div>
+                    </div>
+                    <p style="margin-top: 10px;"><strong>Description:</strong> Assist professors with research projects, conduct experiments, analyze data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Race Premium Lock Modal -->
+    <div id="racePremiumModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏁 Race Mode</h2>
+                <button class="modal-close" onclick="closeModal('racePremiumModal')">&times;</button>
+            </div>
+            <div class="premium-lock-screen">
+                <span class="premium-badge">💎 PREMIUM FEATURE</span>
+                <h2 style="color: rgb(var(--neon-gold)); margin: 20px 0;">This feature is exclusive to Premium Members</h2>
+                <p style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.8); margin: 20px 0;">
+                    Unlock real-time multiplayer races where you compete against other users to solve problems faster. 
+                    Become a Premium User today to access this thrilling feature.
+                </p>
+                <div class="premium-benefits">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">✨ Premium Benefits:</h3>
+                    <ul style="text-align: left;">
+                        <li>✅ Unlimited Races - Race anytime, anywhere</li>
+                        <li>🌍 Global Leaderboard Access - Compete worldwide</li>
+                        <li>🏆 Special Badges &amp; Rewards - Unlock achievements</li>
+                        <li>⚡ Faster Problem Solving Tracks - Advanced challenges</li>
+                        <li>📈 Performance Analytics - Track your progress</li>
+                    </ul>
+                </div>
+                <button class="btn-upgrade" onclick="alert('Redirecting to Premium Subscription page...');">Upgrade to Premium</button>
+                <button class="btn" onclick="alert('Premium Features Info...');">Learn More</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Match Premium Lock Modal -->
+    <div id="matchPremiumModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👥 Match Mode</h2>
+                <button class="modal-close" onclick="closeModal('matchPremiumModal')">&times;</button>
+            </div>
+            <div class="premium-lock-screen">
+                <span class="premium-badge">💎 PREMIUM FEATURE</span>
+                <h2 style="color: rgb(var(--neon-gold)); margin: 20px 0;">This feature is exclusive to Premium Members</h2>
+                <p style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.8); margin: 20px 0;">
+                    Join or create teams of 7 members and collaborate to solve challenging problems together. 
+                    Become a Premium User to unlock team-based learning and competitive problem-solving.
+                </p>
+                <div class="premium-benefits">
+                    <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">✨ Premium Benefits:</h3>
+                    <ul style="text-align: left;">
+                        <li>✅ Unlimited Team Formations - Create multiple teams</li>
+                        <li>🏆 Team Leaderboards - Compete as a team</li>
+                        <li>🤝 Collaborative Tools - Real-time teamwork</li>
+                        <li>🎖️ Achievement Badges - Team milestones</li>
+                        <li>📊 Real-Time Collaboration - Work together seamlessly</li>
+                        <li>🗣️ Voice &amp; Video Chat - Communicate effectively</li>
+                    </ul>
+                </div>
+                <button class="btn-upgrade" onclick="alert('Redirecting to Premium Subscription page...');">Upgrade to Premium</button>
+                <button class="btn" onclick="alert('Premium Features Info...');">Learn More</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learn Detailed Modal (FREE) -->
+    <div id="learnDetailedModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>📖 Learn Mode</h2>
+                <span class="free-badge">⭐ FREE ACCESS</span>
+                <button class="modal-close" onclick="closeModal('learnDetailedModal')">&times;</button>
+            </div>
+            <div class="learning-mode-detailed">
+                <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">Interactive Lessons with Self-Assessment</h3>
+                <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px;">
+                    This feature is free for all users. Access unlimited lessons with rich media content, progress tracking, and instant feedback.
+                </p>
+                
+                <div style="background: rgba(var(--dark-bg), 0.6); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h4 style="color: rgb(var(--neon-purple)); margin-bottom: 10px;">🎯 Current Lesson: Data Structures Fundamentals</h4>
+                    <div class="lesson-progress">
+                        <div class="lesson-progress-fill" style="width: 65%;"></div>
+                    </div>
+                    <p style="margin: 10px 0; color: rgba(255, 255, 255, 0.7);">Progress: 65% Complete</p>
+                    
+                    <div style="margin: 20px 0; padding: 15px; background: rgba(var(--neon-cyan), 0.1); border-radius: 8px; border-left: 3px solid rgb(var(--neon-cyan));">
+                        <h5 style="margin-bottom: 10px;">📚 Lesson Content:</h5>
+                        <p style="font-size: 0.95rem; line-height: 1.6;">
+                            Learn about arrays, linked lists, stacks, and queues. Understand when to use each data structure 
+                            and their time/space complexities.
+                        </p>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <h5 style="margin-bottom: 10px;">❓ Self-Assessment Question:</h5>
+                        <p style="margin-bottom: 10px;">What is the time complexity of accessing an element in an array?</p>
+                        <div class="quiz-option">A. O(1) - Constant time</div>
+                        <div class="quiz-option">B. O(n) - Linear time</div>
+                        <div class="quiz-option">C. O(log n) - Logarithmic time</div>
+                    </div>
+                </div>
+
+                <h4 style="color: rgb(var(--neon-green)); margin: 20px 0;">✨ FREE Features:</h4>
+                <ul style="line-height: 2;">
+                    <li>✅ Unlimited Access to All Lessons</li>
+                    <li>📊 Progress Tracking &amp; Resume</li>
+                    <li>🔖 Bookmark Lessons for Later</li>
+                    <li>⚡ Instant Feedback on Questions</li>
+                    <li>🎓 Certificate of Completion</li>
+                    <li>📝 Detailed Explanations</li>
+                </ul>
+
+                <button class="btn-primary btn-full mt-20" onclick="alert('Starting lesson...')">Continue Lesson</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Detailed Modal (FREE) -->
+    <div id="quizDetailedModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>❓ Quiz Mode</h2>
+                <span class="free-badge">⭐ FREE ACCESS</span>
+                <button class="modal-close" onclick="closeModal('quizDetailedModal')">&times;</button>
+            </div>
+            <div class="learning-mode-detailed">
+                <h3 style="color: rgb(var(--neon-cyan)); margin-bottom: 15px;">Timed Quiz Challenge with Instant Feedback</h3>
+                <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px;">
+                    This feature is free for all users. Take unlimited quizzes with instant scoring and performance tracking.
+                </p>
+                
+                <div class="quiz-timer">⏱️ 02:45</div>
+
+                <div class="quiz-question">
+                    <h4 style="margin-bottom: 15px;">Question 3 of 10</h4>
+                    <p style="font-size: 1.1rem; margin-bottom: 20px;">Which sorting algorithm has the best average time complexity?</p>
+                    <div class="quiz-option">A. Bubble Sort - O(n²)</div>
+                    <div class="quiz-option">B. Merge Sort - O(n log n)</div>
+                    <div class="quiz-option">C. Selection Sort - O(n²)</div>
+                    <div class="quiz-option">D. Insertion Sort - O(n²)</div>
+                </div>
+
+                <h4 style="color: rgb(var(--neon-green)); margin: 20px 0;">✨ FREE Features:</h4>
+                <ul style="line-height: 2;">
+                    <li>✅ Unlimited Quiz Attempts</li>
+                    <li>⏱️ Countdown Timer for Each Question</li>
+                    <li>⚡ Instant Scoring &amp; Feedback</li>
+                    <li>📊 Performance Statistics</li>
+                    <li>🏆 Leaderboards (Free Users)</li>
+                    <li>🔄 Review Answers with Explanations</li>
+                    <li>📈 Quiz History &amp; Progress Tracking</li>
+                </ul>
+
+                <button class="btn-primary btn-full mt-20" onclick="alert('Starting quiz...')">Start Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Mentor Modal -->
+    <div id="bookMentorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📅 Book Mentor Session</h2>
+                <button class="modal-close" onclick="closeModal('bookMentorModal')">&times;</button>
+            </div>
+            <form onsubmit="handleMentorBooking(event)">
+                <div class="form-group">
+                    <label>Session Format</label>
+                    <select required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        <option value="">Select format</option>
+                        <option>Video Call</option>
+                        <option>Voice Call</option>
+                        <option>Chat-based</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Session Duration</label>
+                    <select required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        <option value="">Select duration</option>
+                        <option>15 minutes</option>
+                        <option>30 minutes</option>
+                        <option>1 hour</option>
+                        <option>Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Date</label>
+                    <input type="date" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Preferred Time</label>
+                    <input type="time" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <button type="submit" class="btn-primary btn-full">Confirm Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Emergency Fund Modal -->
+    <div id="emergencyFundModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🆘 Request Emergency Fund</h2>
+                <button class="modal-close" onclick="closeModal('emergencyFundModal')">&times;</button>
+            </div>
+            <form onsubmit="handleEmergencyFund(event)">
+                <div class="form-group">
+                    <label>Amount Requested ($)</label>
+                    <input type="number" required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Reason for Request</label>
+                    <textarea required style="width: 100%; min-height: 80px; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Urgency Level</label>
+                    <select required style="width: 100%; padding: 10px; background: rgba(var(--dark-bg), 0.6); border: 1px solid rgba(var(--neon-cyan), 0.3); border-radius: 8px; color: #fff;">
+                        <option value="">Select urgency</option>
+                        <option>Immediate</option>
+                        <option>Within 1 week</option>
+                        <option>Within 1 month</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Submit Request</button>
+            </form>
+        </div>
+    </div>
+
+        <!-- Additional Modals (opened from Financial & Settings cards) -->
+        <!-- Financial Literacy Modal -->
+        <div id="financialLiteracyModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📚 Financial Literacy</h2>
+                    <button class="modal-close" onclick="closeModal('financialLiteracyModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        <li><strong>Budgeting Basics</strong> — Needs vs Wants, 50/30/20</li>
+                        <li><strong>Saving & Goals</strong> — Compound interest and goal planner</li>
+                        <li><strong>Banking Basics</strong> — Accounts and digital payments</li>
+                        <li><strong>Debt & Credit</strong> — Student loans and credit scores</li>
+                        <li><strong>AI Finance Advisor</strong> — Personalized tips</li>
+                    </ul>
+                    <div style="margin-top:16px; text-align:right;"><button class="btn-primary" onclick="closeModal('financialLiteracyModal')">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Settings Modal -->
+        <div id="profileSettingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>👤 Profile Settings</h2>
+                    <button class="modal-close" onclick="closeModal('profileSettingsModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        <li>Edit Personal Info</li>
+                        <li>Study Goals</li>
+                        <li>Progress Stats</li>
+                        <li>Achievements</li>
+                        <li>Import / Export Data</li>
+                    </ul>
+                    <div style="margin-top:16px; text-align:right;"><button class="btn-primary" onclick="closeModal('profileSettingsModal')">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Modal -->
+        <div id="notificationsSettingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔔 Notifications</h2>
+                    <button class="modal-close" onclick="closeModal('notificationsSettingsModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        <li>Assignment Reminders</li>
+                        <li>Exam Alerts</li>
+                        <li>Custom Templates</li>
+                        <li>Group Notifications</li>
+                        <li>Quiet Hours & Sound Control</li>
+                    </ul>
+                    <div style="margin-top:16px; text-align:right;"><button class="btn-primary" onclick="closeModal('notificationsSettingsModal')">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Modal -->
+        <div id="privacySettingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔒 Privacy & Security</h2>
+                    <button class="modal-close" onclick="closeModal('privacySettingsModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        <li>Data Sharing</li>
+                        <li>Third-Party Access</li>
+                        <li>Security Dashboard</li>
+                        <li>App Lock & 2FA</li>
+                        <li>Delete Account</li>
+                    </ul>
+                    <div style="margin-top:16px; text-align:right;"><button class="btn-primary" onclick="closeModal('privacySettingsModal')">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance Modal -->
+        <div id="appearanceSettingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🎨 Appearance</h2>
+                    <button class="modal-close" onclick="closeModal('appearanceSettingsModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        <li>Theme Selection (Light / Dark / Neon)</li>
+                        <li>Font Settings</li>
+                        <li>Layout Options</li>
+                        <li>Background & Accent Color</li>
+                    </ul>
+                    <div style="margin-top:16px; text-align:right;"><button class="btn-primary" onclick="closeModal('appearanceSettingsModal')">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Devices Modal -->
+        <div id="devicesSettingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>💻 Connected Devices</h2>
+                    <button class="modal-close" onclick="closeModal('devicesSettingsModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        <li>Device List & Nicknames</li>
+                        <li>Remote Sign-Out</li>
+                        <li>Study Sync Mode</li>
+                        <li>Security Alerts & Login History</li>
+                    </ul>
+                    <div style="margin-top:16px; text-align:right;"><button class="btn-primary" onclick="closeModal('devicesSettingsModal')">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Language Modal -->
+        <div id="languageSettingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🌐 Language & Region</h2>
+                    <button class="modal-close" onclick="closeModal('languageSettingsModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul>
+                        <li>Change Language (10+ supported)</li>
+                        <li>Translation Preview</li>
+                        <li>Time Zone & Regional Formats</li>
+                    </ul>
+                    <div style="margin-top:16px; text-align:right;"><button class="btn-primary" onclick="closeModal('languageSettingsModal')">Close</button></div>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        /* ============================================
+           JAVASCRIPT - NAVIGATION & STATE MANAGEMENT
+           ============================================ */
+        
+        // Page Navigation Functions
+        function showLogin() {
+            document.getElementById('landingPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            // Demo: Accept any credentials
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            initializeCharts();
+        }
+
+        /* ============================================
+           SECTION SWITCHING (SIDEBAR NAVIGATION)
+           ============================================ */
+        function switchSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            // Show selected section
+            const selectedSection = document.getElementById(sectionName + 'Section');
+            if (selectedSection) {
+                selectedSection.classList.add('active');
+            }
+
+            // Update active menu item
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            event.target.closest('.menu-item').classList.add('active');
+
+            // Scroll to top of content
+            document.querySelector('.dashboard-container').scrollTop = 0;
+        }
+
+        /* ============================================
+           SMART DROPDOWN POSITIONING
+           This function ensures dropdowns never overlap the sidebar
+           ============================================ */
+        function smartDropdownPosition(dropdownElement, toggleElement) {
+            const sidebarWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const offset = 20; // Minimum distance from edges
+
+            const toggleRect = toggleElement.getBoundingClientRect();
+            const dropdownRect = dropdownElement.getBoundingClientRect();
+
+            let left = 0;
+            let top = toggleRect.bottom + 5;
+
+            // Check if dropdown would overlap with sidebar
+            if (toggleRect.left < sidebarWidth + offset) {
+                // Position to the right of toggle if too close to sidebar
+                left = toggleRect.right + 10;
+                top = toggleRect.top;
+            } else {
+                // Default position below toggle
+                left = toggleRect.left;
+            }
+
+            // Check if dropdown would go off right edge
+            if (left + dropdownRect.width > viewportWidth - offset) {
+                left = viewportWidth - dropdownRect.width - offset;
+            }
+
+            // Check if dropdown would go off bottom edge
+            if (top + dropdownRect.height > viewportHeight - offset) {
+                top = toggleRect.top - dropdownRect.height - 5;
+            }
+
+            // Ensure dropdown doesn't go off top edge
+            if (top < offset) {
+                top = offset;
+            }
+
+            // Apply positioning
+            dropdownElement.style.position = 'fixed';
+            dropdownElement.style.left = left + 'px';
+            dropdownElement.style.top = top + 'px';
+        }
+
+        /* ============================================
+           MODAL MANAGEMENT
+           ============================================ */
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        });
+
+        /* ============================================
+           FORM SUBMISSION HANDLERS
+           ============================================ */
+        function handleCounselingBooking(event) {
+            event.preventDefault();
+            alert('Counseling appointment booked successfully! You will receive a confirmation email.');
+            closeModal('counselingModal');
+        }
+
+        function handleCareerBooking(event) {
+            event.preventDefault();
+            alert('Career counseling session booked successfully! You will receive a confirmation email.');
+            closeModal('careerCounselorModal');
+        }
+
+        function handleFacultyBooking(event) {
+            event.preventDefault();
+            alert('Faculty appointment booked successfully! You will receive a confirmation email.');
+            closeModal('facultyModal');
+        }
+
+        function handleAdvisorBooking(event) {
+            event.preventDefault();
+            alert('Academic advisor appointment booked successfully! You will receive a confirmation email.');
+            closeModal('advisorModal');
+        }
+
+        function handleEmergencyFund(event) {
+            event.preventDefault();
+            alert('Emergency fund request submitted successfully! Our team will review and contact you within 24 hours.');
+            closeModal('emergencyFundModal');
+        }
+
+        /* ============================================
+           INTERACTIVE FEATURES
+           ============================================ */
+        let waterCups = 6;
+        function addWaterCup() {
+            if (waterCups < 8) {
+                waterCups++;
+                document.querySelector('.card h3:contains("Hydration")').nextElementSibling.textContent = waterCups + '/8 Cups';
+            }
+        }
+
+        let studyTimerRunning = false;
+        let studySeconds = 0;
+        let studyInterval;
+
+        function toggleStudyTimer() {
+            const button = event.target;
+            if (!studyTimerRunning) {
+                studyTimerRunning = true;
+                button.textContent = 'Stop Session';
+                studyInterval = setInterval(() => {
+                    studySeconds++;
+                    const hours = Math.floor(studySeconds / 3600);
+                    const minutes = Math.floor((studySeconds % 3600) / 60);
+                    const secs = studySeconds % 60;
+                    document.getElementById('studyTimer').textContent = 
+                        String(hours).padStart(2, '0') + ':' + 
+                        String(minutes).padStart(2, '0') + ':' + 
+                        String(secs).padStart(2, '0');
+                }, 1000);
+            } else {
+                studyTimerRunning = false;
+                button.textContent = 'Start Session';
+                clearInterval(studyInterval);
+            }
+        }
+
+        function trackMood(mood) {
+            alert('Mood tracked: ' + mood + '! Your wellness data has been updated.');
+        }
+
+        /* ============================================
+           HYDRATION TRACKER FUNCTIONS
+           ============================================ */
+        let hydrationData = {
+            current: 1500,
+            goal: 2000,
+            remindersEnabled: false,
+            reminderInterval: null
+        };
+
+        const hydrationTips = [
+            "Drink water every hour to stay energized!",
+            "Your brain is 75% water - keep it hydrated!",
+            "Water helps flush toxins from your body.",
+            "Staying hydrated improves concentration.",
+            "Drink water before, during, and after exercise.",
+            "If you were a plant, you'd be thirsty!",
+            "Don't let dehydration sneak up on you!",
+            "Flex that H2O power! 💪"
+        ];
+
+        function addWater(ml) {
+            hydrationData.current = Math.min(hydrationData.current + ml, hydrationData.goal + 500);
+            updateHydrationDisplay();
+        }
+
+        function updateHydrationDisplay() {
+            const percent = Math.min((hydrationData.current / hydrationData.goal) * 100, 100);
+            document.getElementById('hydrationStat').textContent = `${hydrationData.current}/${hydrationData.goal} ml`;
+            document.getElementById('hydrationPercent').textContent = `${Math.round(percent)}% of daily goal`;
+            document.getElementById('waterFill').style.height = `${percent}%`;
+            
+            // Random hydration tip
+            const randomTip = hydrationTips[Math.floor(Math.random() * hydrationTips.length)];
+            document.getElementById('hydrationTip').textContent = randomTip;
+            
+            if (hydrationData.current >= hydrationData.goal) {
+                alert('🎉 Congratulations! You\'ve reached your daily hydration goal!');
+            }
+        }
+
+        function toggleHydrationReminders() {
+            hydrationData.remindersEnabled = !hydrationData.remindersEnabled;
+            const btn = document.getElementById('reminderToggle');
+            
+            if (hydrationData.remindersEnabled) {
+                btn.textContent = '⏸️ Pause Reminders';
+                btn.style.background = 'rgba(var(--neon-pink), 0.3)';
+                
+                // Request notification permission
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission();
+                }
+                
+                // Set interval for reminders (every 60 minutes)
+                hydrationData.reminderInterval = setInterval(() => {
+                    showHydrationNotification();
+                }, 60 * 60 * 1000); // 1 hour
+                
+                alert('✅ Hydration reminders enabled! You\'ll receive notifications every hour.');
+            } else {
+                btn.textContent = '⏰ Enable Reminders';
+                btn.style.background = '';
+                if (hydrationData.reminderInterval) {
+                    clearInterval(hydrationData.reminderInterval);
+                }
+                alert('⏸️ Hydration reminders paused.');
+            }
+        }
+
+        function showHydrationNotification() {
+            const messages = [
+                "💧 Time to hydrate! Drink some water.",
+                "🌊 Hydration check! Don't forget your water.",
+                "💦 Stay hydrated, stay healthy!",
+                "🚰 Water break! Your body needs it."
+            ];
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            
+            // Try browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Student Hub - Hydration Reminder', {
+                    body: randomMsg,
+                    icon: '💧'
+                });
+            } else {
+                // Fallback to alert
+                alert(randomMsg);
+            }
+        }
+
+        /* ============================================
+           WELLNESS EMOJI ANIMATIONS
+           ============================================ */
+        function triggerEmojiAnimation(mood) {
+            const overlay = document.getElementById('emojiOverlay');
+            overlay.classList.add('active');
+            
+            let emoji = '😊';
+            let count = 20;
+            let animationClass = 'floatUp';
+            
+            if (mood === 'great') {
+                emoji = '😊';
+                count = 30;
+                // Add confetti effect
+                for (let i = 0; i < 15; i++) {
+                    setTimeout(() => createFloatingEmoji('🎉', overlay), i * 50);
+                }
+            } else if (mood === 'okay') {
+                emoji = '😐';
+                count = 15;
+            } else if (mood === 'struggling') {
+                emoji = '😟';
+                count = 20;
+                // Redirect after animation
+                setTimeout(() => {
+                    alert('We\'re here to help! Redirecting you to wellness resources...');
+                    switchSection('wellness');
+                }, 3000);
+            }
+            
+            // Create floating emojis
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => createFloatingEmoji(emoji, overlay), i * 100);
+            }
+            
+            // Remove overlay after animation
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                overlay.innerHTML = '';
+            }, 4000);
+        }
+
+        function createFloatingEmoji(emoji, container) {
+            const floater = document.createElement('div');
+            floater.className = 'floating-emoji';
+            floater.textContent = emoji;
+            floater.style.left = Math.random() * window.innerWidth + 'px';
+            floater.style.top = window.innerHeight + 'px';
+            container.appendChild(floater);
+            
+            setTimeout(() => floater.remove(), 3000);
+        }
+
+        /* ============================================
+           DROPDOWN TOGGLE FUNCTION
+           ============================================ */
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const isCurrentlyOpen = dropdown.classList.contains('show');
+            
+            // Close all dropdowns
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            
+            // Toggle current dropdown
+            if (!isCurrentlyOpen) {
+                dropdown.classList.add('show');
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        /* ============================================
+           ACCORDION TOGGLE FUNCTION
+           ============================================ */
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const isOpen = content.classList.contains('active');
+            
+            // Close all accordions
+            document.querySelectorAll('.accordion-content').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Toggle current accordion
+            if (!isOpen) {
+                content.classList.add('active');
+            }
+        }
+
+        /* ============================================
+           INTERNSHIP FILTER FUNCTION
+           ============================================ */
+        function filterInternships(filter) {
+            const cards = document.querySelectorAll('.internship-card');
+            
+            // Update active filter button
+            document.querySelectorAll('#internshipModal .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide cards based on filter
+            cards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                } else if (card.dataset.domain === filter || card.dataset.mode === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        /* ============================================
+           FINANCIAL CALCULATOR FUNCTIONS
+           ============================================ */
+        function calculateBudget() {
+            const income = parseFloat(document.getElementById('budgetIncome').value) || 0;
+            const expenses = parseFloat(document.getElementById('budgetExpenses').value) || 0;
+            const remaining = income - expenses;
+            
+            const resultDiv = document.getElementById('budgetResult');
+            resultDiv.style.display = 'block';
+            
+            if (remaining > 0) {
+                resultDiv.textContent = `✅ Surplus: $${remaining.toFixed(2)}`;
+                resultDiv.style.background = 'rgba(var(--neon-green), 0.1)';
+                resultDiv.style.color = 'rgb(var(--neon-green))';
+            } else if (remaining < 0) {
+                resultDiv.textContent = `⚠️ Deficit: $${Math.abs(remaining).toFixed(2)}`;
+                resultDiv.style.background = 'rgba(var(--neon-pink), 0.1)';
+                resultDiv.style.color = 'rgb(var(--neon-pink))';
+            } else {
+                resultDiv.textContent = `💯 Balanced Budget!`;
+                resultDiv.style.background = 'rgba(var(--neon-cyan), 0.1)';
+                resultDiv.style.color = 'rgb(var(--neon-cyan))';
+            }
+        }
+
+        function calculateCollege() {
+            const tuition = parseFloat(document.getElementById('collegeTuition').value) || 0;
+            const years = parseFloat(document.getElementById('collegeYears').value) || 0;
+            const total = tuition * years;
+            
+            const resultDiv = document.getElementById('collegeResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = `Total Cost: $${total.toLocaleString()}`;
+        }
+
+        function calculateSavings() {
+            const amount = parseFloat(document.getElementById('savingsAmount').value) || 0;
+            const months = parseFloat(document.getElementById('savingsMonths').value) || 0;
+            const total = amount * months;
+            
+            const resultDiv = document.getElementById('savingsResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = `You'll save: $${total.toLocaleString()} in ${months} months!`;
+        }
+
+        /* ============================================
+           MENTOR BOOKING HANDLER
+           ============================================ */
+        function handleMentorBooking(event) {
+            event.preventDefault();
+            alert('Mentor session booked successfully! You will receive a calendar invitation and reminder.');
+            closeModal('bookMentorModal');
+        }
+
+        /* ============================================
+           CHART.JS INITIALIZATION
+           ============================================ */
+        function initializeCharts() {
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart');
+            if (performanceCtx) {
+                new Chart(performanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                        datasets: [{
+                            label: 'GPA Trend',
+                            data: [3.5, 3.6, 3.7, 3.65, 3.75, 3.75],
+                            borderColor: 'rgb(0, 217, 255)',
+                            backgroundColor: 'rgba(0, 217, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: false,
+                                ticks: { color: '#fff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            x: { 
+                                ticks: { color: '#fff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Course Performance Chart
+            const courseCtx = document.getElementById('courseChart');
+            if (courseCtx) {
+                new Chart(courseCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Math', 'Physics', 'CS', 'English', 'History'],
+                        datasets: [{
+                            label: 'Course Scores (%)',
+                            data: [88, 92, 85, 90, 87],
+                            backgroundColor: [
+                                'rgba(0, 217, 255, 0.6)',
+                                'rgba(255, 0, 110, 0.6)',
+                                'rgba(191, 0, 255, 0.6)',
+                                'rgba(57, 255, 20, 0.6)',
+                                'rgba(255, 215, 0, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgb(0, 217, 255)',
+                                'rgb(255, 0, 110)',
+                                'rgb(191, 0, 255)',
+                                'rgb(57, 255, 20)',
+                                'rgb(255, 215, 0)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                ticks: { color: '#fff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            x: { 
+                                ticks: { color: '#fff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Mood Chart
+            const moodCtx = document.getElementById('moodChart');
+            if (moodCtx) {
+                new Chart(moodCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Mood Score (1-10)',
+                            data: [7, 8, 6, 7, 8, 9, 8],
+                            borderColor: 'rgb(255, 0, 110)',
+                            backgroundColor: 'rgba(255, 0, 110, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                max: 10,
+                                ticks: { color: '#fff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            x: { 
+                                ticks: { color: '#fff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Career Readiness Chart
+            const careerCtx = document.getElementById('careerChart');
+            if (careerCtx) {
+                new Chart(careerCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Technical Skills', 'Communication', 'Leadership', 'Teamwork', 'Problem Solving'],
+                        datasets: [{
+                            label: 'Career Readiness',
+                            data: [85, 78, 72, 88, 90],
+                            borderColor: 'rgb(191, 0, 255)',
+                            backgroundColor: 'rgba(191, 0, 255, 0.2)',
+                            pointBackgroundColor: 'rgb(191, 0, 255)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: { color: '#fff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                pointLabels: { color: '#fff' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Financial Chart
+            const financialCtx = document.getElementById('financialChart');
+            if (financialCtx) {
+                new Chart(financialCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Tuition', 'Housing', 'Food', 'Books', 'Other'],
+                        datasets: [{
+                            label: 'Expenses',
+                            data: [45, 25, 15, 10, 5],
+                            backgroundColor: [
+                                'rgba(0, 217, 255, 0.8)',
+                                'rgba(255, 0, 110, 0.8)',
+                                'rgba(191, 0, 255, 0.8)',
+                                'rgba(57, 255, 20, 0.8)',
+                                'rgba(255, 215, 0, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgb(0, 217, 255)',
+                                'rgb(255, 0, 110)',
+                                'rgb(191, 0, 255)',
+                                'rgb(57, 255, 20)',
+                                'rgb(255, 215, 0)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                labels: { color: '#fff' },
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        /* ============================================
+           CATEGORY DROPDOWN TOGGLE
+           ============================================ */
+        function toggleCategoryDropdown(categoryId) {
+            const dropdown = document.getElementById(categoryId);
+            const arrow = document.getElementById(categoryId + '-arrow');
+            const card = dropdown.closest('.category-card');
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.category-dropdown').forEach(d => {
+                if (d.id !== categoryId) {
+                    d.classList.remove('show');
+                    const otherArrow = document.getElementById(d.id + '-arrow');
+                    if (otherArrow) otherArrow.textContent = '▼';
+                    d.closest('.category-card').classList.remove('active');
+                }
+            });
+            
+            // Toggle current dropdown
+            dropdown.classList.toggle('show');
+            card.classList.toggle('active');
+            arrow.textContent = dropdown.classList.contains('show') ? '▲' : '▼';
+        }
+
+        /* ============================================
+           BUDGET PLANNER WITH PIE CHART
+           ============================================ */
+        let budgetChart = null;
+
+        function calculateDetailedBudget() {
+            const income = parseFloat(document.getElementById('budgetIncomeInput').value) || 0;
+            const rent = parseFloat(document.getElementById('expenseRent').value) || 0;
+            const food = parseFloat(document.getElementById('expenseFood').value) || 0;
+            const transport = parseFloat(document.getElementById('expenseTransport').value) || 0;
+            const entertainment = parseFloat(document.getElementById('expenseEntertainment').value) || 0;
+            const utilities = parseFloat(document.getElementById('expenseUtilities').value) || 0;
+            const other = parseFloat(document.getElementById('expenseOther').value) || 0;
+            
+            const totalExpenses = rent + food + transport + entertainment + utilities + other;
+            const remaining = income - totalExpenses;
+            
+            // Show result section
+            document.getElementById('budgetResultSection').style.display = 'block';
+            
+            // Update result box
+            const resultBox = document.getElementById('budgetResultBox');
+            const resultAmount = document.getElementById('budgetResultAmount');
+            resultAmount.textContent = '$' + remaining.toFixed(2);
+            
+            if (remaining > 0) {
+                resultBox.style.background = 'rgba(var(--neon-green), 0.2)';
+                resultBox.style.borderColor = 'rgb(var(--neon-green))';
+                resultAmount.style.color = 'rgb(var(--neon-green))';
+            } else {
+                resultBox.style.background = 'rgba(var(--neon-pink), 0.2)';
+                resultBox.style.borderColor = 'rgb(var(--neon-pink))';
+                resultAmount.style.color = 'rgb(var(--neon-pink))';
+            }
+            
+            // Create/Update Pie Chart
+            const ctx = document.getElementById('budgetPieChart');
+            if (budgetChart) {
+                budgetChart.destroy();
+            }
+            
+            budgetChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Rent', 'Food', 'Transport', 'Entertainment', 'Utilities', 'Other'],
+                    datasets: [{
+                        data: [rent, food, transport, entertainment, utilities, other],
+                        backgroundColor: [
+                            'rgba(0, 217, 255, 0.8)',
+                            'rgba(255, 0, 110, 0.8)',
+                            'rgba(191, 0, 255, 0.8)',
+                            'rgba(57, 255, 20, 0.8)',
+                            'rgba(255, 215, 0, 0.8)',
+                            'rgba(255, 165, 0, 0.8)'
+                        ],
+                        borderColor: '#1f0e47',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff' },
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Show actionable tip
+            const tipBox = document.getElementById('budgetTipBox');
+            if (remaining < 0) {
+                tipBox.className = 'budget-tip negative';
+                tipBox.innerHTML = '<strong>⚠️ Recommendation:</strong> Your expenses exceed income by $' + Math.abs(remaining).toFixed(2) + 
+                    '. Consider exploring our <strong>Emergency Fund</strong> or <strong>Education Loans</strong> sections for financial assistance.';
+            } else if (remaining > 0) {
+                tipBox.className = 'budget-tip positive';
+                tipBox.innerHTML = '<strong>✅ Great Job!</strong> You have a surplus of $' + remaining.toFixed(2) + 
+                    '. Consider taking our <strong>Financial Literacy</strong> course to learn how to invest your savings wisely!';
+            } else {
+                tipBox.className = 'budget-tip';
+                tipBox.innerHTML = '<strong>💯 Perfect Balance!</strong> Your budget is perfectly balanced. Keep up the good work!';
+            }
+        }
+
+        /* ============================================
+           WORK-STUDY JOB FILTERING
+           ============================================ */
+        function filterJobs(filter) {
+            const jobCards = document.querySelectorAll('.job-card');
+            
+            // Update active filter button
+            document.querySelectorAll('#workStudyModal .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter jobs
+            jobCards.forEach(card => {
+                const dept = card.dataset.dept;
+                const pay = parseFloat(card.dataset.pay);
+                
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                } else if (filter === 'high-pay' && pay >= 15) {
+                    card.style.display = 'block';
+                } else if (dept && dept.includes(filter)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function applyForJob(jobTitle) {
+            alert('✅ Your demo application for "' + jobTitle + '" has been submitted successfully!\n\nYou will receive an email confirmation shortly.');
+        }
+
+        /* ============================================
+           MOTIVATIONAL QUOTE GENERATOR
+           ============================================ */
+        const motivationalQuotes = [
+            "Success is not final, failure is not fatal: it is the courage to continue that counts. - Winston Churchill",
+            "Believe you can and you're halfway there. - Theodore Roosevelt",
+            "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+            "Education is the most powerful weapon which you can use to change the world. - Nelson Mandela",
+            "The only way to do great work is to love what you do. - Steve Jobs",
+            "Don't watch the clock; do what it does. Keep going. - Sam Levenson",
+            "The expert in anything was once a beginner. - Helen Hayes",
+            "You don't have to be great to start, but you have to start to be great. - Zig Ziglar"
+        ];
+
+        function generateQuote() {
+            const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+            alert('💡 Motivational Quote:\n\n' + randomQuote);
+        }
+
+        /* ============================================
+           FEATURE TOGGLES
+           ============================================ */
+        function toggleFeature(featureName) {
+            const status = Math.random() > 0.5 ? 'enabled' : 'disabled';
+            alert('🔔 ' + featureName.charAt(0).toUpperCase() + featureName.slice(1) + ' notifications ' + status + '!');
+        }
+
+        /* ============================================
+           INITIALIZATION
+           ============================================ */
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('UNISPHERE - Application Ready');
+            console.log('Sidebar Width:', getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'));
+            console.log('Dropdown Z-Index:', getComputedStyle(document.documentElement).getPropertyValue('--dropdown-z-index'));
+            
+            // Auto-calculate budget on input change
+            const expenseInputs = document.querySelectorAll('.expense-input');
+            expenseInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Optional: auto-calculate on change
+                });
+            });
+        });
+    </script>
+
+
+    <!-- ============================================
+         MODULE IMPORTS (JavaScript)
+         ============================================ -->
+
+    <!-- Module 1: Authentication -->
+    <script src="modules/auth_module.js"></script>
+
+    <!-- Module 2: Navigation -->
+    <script src="modules/navigation_module.js"></script>
+
+    <!-- Module 3: Modal Management -->
+    <script src="modules/modal_module.js"></script>
+
+    <!-- Module 4: Wellness & Health -->
+    <script src="modules/wellness_module.js"></script>
+
+    <!-- Module 5: Financial Tools -->
+    <script src="modules/financial_module.js"></script>
+
+    <!-- Module 6: Career Management -->
+    <script src="modules/career_module.js"></script>
+
+    <!-- Module 7: Booking Services -->
+    <script src="modules/booking_module.js"></script>
+
+    <!-- Module 8: Learning & Academics -->
+    <script src="modules/learning_module.js"></script>
+
+    <!-- Chat Widget (Module 9 - Frontend-only demo) -->
+    <!-- Floating chat button and panel will be injected by modules/module_9_chatbot.js -->
+    <script src="modules/module_9_chatbot.js"></script>
+
+    <!-- Main Controller & Coordinator -->
+    <script src="main.js"></script>
+
+</body>
+</html>
