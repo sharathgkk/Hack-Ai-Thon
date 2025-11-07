@@ -1,0 +1,2993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNISPHERE - Student Dashboard</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* --- PROFESSIONAL THEME (White, Pink, Purple) --- */
+        :root {
+            /* Core Colors: Pink/Rose and Purple/Violet */
+            --primary: 244 63 94; /* Rose-500 (Pink) */
+            --primary-light: 251 113 133; /* Rose-400 (Lighter Pink) */
+            --accent: 168 85 247; /* Purple-500 */
+            --danger: 239 68 68; /* Red-500 */
+            
+            /* Light Theme Colors */
+            --dark-bg: 255 255 255; /* White background */
+            --dark-surface: 248 249 250; /* Very Light Gray surface */
+            --dark-card: 255 255 255; /* White card */
+            --dark-border: 220 220 220; /* Lighter Border Gray */
+
+            /* Sidebar Configuration */
+            --sidebar-width: 250px;
+            --content-margin-left: 250px;
+            
+            /* Text Color */
+            --text-color: 17 24 39; /* Gray-900 (Dark text) */
+        }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 70px;
+                --content-margin-left: 70px;
+            }
+            .sidebar .sidebar-header h2,
+            .sidebar .menu-item span:not(.icon) { display: none; }
+            .sidebar .menu-item { justify-content: center; padding: 12px 0; }
+            .sidebar .menu-item .icon { margin-right: 0; }
+            /* Adjust profile menu position on small screens */
+            .dashboard-header { justify-content: space-between; }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: rgb(var(--dark-bg));
+            color: rgb(var(--text-color)); /* Updated text color */
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Ensures all text is dark by default, unless colored by Tailwind utility */
+        .text-white { color: white; }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: rgb(var(--dark-surface));
+            border-right: 1px solid rgb(var(--dark-border));
+            transition: width 0.3s ease;
+            z-index: 10;
+        }
+        
+        .dashboard-container {
+            margin-left: var(--content-margin-left);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* UI Components - Modernized look */
+        .card-professional {
+            background-color: rgb(var(--dark-card));
+            border: 1px solid rgb(var(--dark-border));
+            transition: all 0.2s;
+            /* Sharper, more subtle shadow for modern feel */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03); 
+        }
+        .card-professional:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary { 
+            background-color: rgb(var(--primary)); 
+            color: white; /* Ensure primary button text is white */
+            box-shadow: 0 2px 4px rgba(var(--primary), 0.4);
+        }
+        .btn-primary:hover { 
+            background-color: rgb(var(--primary-light)); 
+        }
+
+        /* ACTIVE MENU ITEM ENHANCEMENT */
+        .sidebar .menu-item {
+            color: rgb(75 85 99); /* Gray-600 */
+            transition: all 0.2s;
+        }
+        .sidebar .menu-item.active {
+            background-color: rgba(var(--primary), 0.1); /* Subtle pink background */
+            color: rgb(var(--primary));            /* Bright pink text */
+            border-right: 4px solid rgb(var(--primary)); /* Strong right border accent */
+            font-weight: 600;
+        }
+        .sidebar .menu-item:not(.active):hover {
+            background-color: rgb(243 244 246); /* Light gray hover background */
+            color: rgb(var(--text-color)); /* Darker hover text */
+        }
+        
+        /* Darker text color for inputs/login fields */
+        .login-container input, .modal-content input, .modal-content select, .modal-content textarea {
+            color: rgb(var(--text-color));
+            background-color: white;
+            border-color: rgb(var(--dark-border));
+        }
+
+        /* Water Bottle & Mood */
+        .water-bottle {
+            width: 80px; height: 150px; background: rgba(0, 0, 0, 0.05); /* Lighter version */
+            border: 2px solid rgb(var(--primary)); border-radius: 10px 10px 20px 20px;
+            position: relative; overflow: hidden; margin: 10px auto;
+        }
+        .water-fill {
+            position: absolute; bottom: 0; width: 100%;
+            background-color: rgb(var(--primary)); transition: height 0.5s ease;
+        }
+        .mood-btn { background-color: rgb(var(--dark-surface)); }
+        .mood-btn.selected {
+            border: 3px solid rgb(var(--accent));
+            box-shadow: 0 0 15px rgba(var(--accent), 0.8);
+            transform: scale(1.05);
+        }
+        #notification-badge {
+            position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px;
+            border-radius: 50%; background: rgb(var(--danger)); color: white;
+            font-size: 0.75rem; display: flex; align-items: center; justify-content: center; padding: 2px;
+        }
+        .modal {
+            display: none; position: fixed; z-index: 4000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background-color: rgb(var(--dark-card)); 
+            border: 1px solid rgb(var(--dark-border)); /* Adjusted to 1px for modern look */
+            max-width: 90%; max-height: 90vh; overflow-y: auto; border-radius: 0.75rem;
+            color: rgb(var(--text-color)); /* Ensure modal content text is dark */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* Stronger shadow for modal */
+        }
+        
+        /* Adjusting chart colors to fit the light theme */
+        .chart-container {
+             background-color: white; /* White background for clean charts */
+             border: 1px solid rgb(var(--dark-border));
+        }
+        
+        /* Adjusting chat colors to fit the new theme */
+        #chatbotModal .chat-message.bot span {
+             background-color: rgb(243 232 255); /* Lighter purple/pink background for bot */
+             color: rgb(var(--text-color));
+        }
+        #chatbotModal .chat-message.user span {
+             background-color: rgb(253 230 138); /* Light yellow/pink for user */
+             color: rgb(var(--text-color));
+        }
+        
+        /* Login screen text color fix */
+        .login-page label { color: rgb(75 85 99); }
+        .login-page p { color: rgb(107 114 128); }
+
+        /* Timer Styles */
+        #timer-display {
+            font-size: 4rem;
+            font-weight: 800;
+            color: rgb(var(--accent));
+            line-height: 1;
+        }
+
+        /* Profile Dropdown */
+        #profile-dropdown-menu {
+            right: 0;
+            top: 100%;
+            display: none;
+        }
+        #profile-dropdown.active #profile-dropdown-menu {
+            display: block;
+        }
+
+        /* Webcam styles */
+        #webcam-container {
+            width: 100%;
+            height: 150px;
+            background-color: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        #webcam-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror the video */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Message Box (Alert/Confirm Replacement) -->
+    <div id="message-box" role="alert" class="fixed bottom-4 right-4 p-4 rounded-lg shadow-xl hidden z-50 transition-all duration-300 text-white font-semibold">
+        <span id="message-text"></span>
+        <button id="message-close-btn" class="text-xl ml-4">&times;</button>
+    </div>
+
+    <!-- Login/Signup Page -->
+    <div id="authPage" class="login-page flex flex-col items-center justify-center min-h-screen p-4">
+        <div class="login-container bg-white p-8 rounded-xl shadow-2xl border border-gray-300 w-full max-w-md">
+            <h2 id="auth-title" class="text-3xl font-bold mb-6 text-center" style="color: rgb(var(--primary));">🔐 Student Login</h2>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label for="username" class="block mb-1">Username (Use 'student' / 'admin')</label>
+                    <input type="text" id="username" value="student" required class="w-full p-3 rounded-lg border">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block mb-1">Password (Use 'studentpass' / 'adminpass')</label>
+                    <input type="password" id="password" value="studentpass" required class="w-full p-3 rounded-lg border">
+                </div>
+                <button type="submit" class="btn-primary w-full p-3 rounded-lg font-semibold">Log In</button>
+                <p id="auth-message" class="text-center mt-3 text-red-500 text-sm"></p>
+                <p class="text-center mt-4 text-sm">
+                    Don't have an account? 
+                    <button type="button" onclick="showSignup()" class="text-blue-600 hover:underline">Sign Up</button>
+                    | 
+                    <button type="button" onclick="showAdminLogin()" class="text-red-600 hover:underline">Admin Login</button>
+                </p>
+            </form>
+
+            <form id="signupForm" onsubmit="handleSignup(event)" class="hidden">
+                <div class="mb-4">
+                    <label for="new-username" class="block mb-1">New Username</label>
+                    <input type="text" id="new-username" required class="w-full p-3 rounded-lg border">
+                </div>
+                <div class="mb-6">
+                    <label for="new-password" class="block mb-1">Password</label>
+                    <input type="password" id="new-password" required class="w-full p-3 rounded-lg border">
+                </div>
+                <button type="submit" class="btn-primary w-full p-3 rounded-lg font-semibold">Create Account</button>
+                <p id="signup-message" class="text-center mt-3 text-red-500 text-sm"></p>
+                <p class="text-center mt-4 text-sm">
+                    Already have an account? 
+                    <button type="button" onclick="showLoginScreen('student')" class="text-blue-600 hover:underline">Login</button>
+                </p>
+            </form>
+
+            <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="hidden">
+                <div class="mb-4">
+                    <label for="admin-username" class="block mb-1">Admin Username (Use 'admin')</label>
+                    <input type="text" id="admin-username" value="admin" required class="w-full p-3 rounded-lg border">
+                </div>
+                <div class="mb-6">
+                    <label for="admin-password" class="block mb-1">Admin Password (Use 'adminpass')</label>
+                    <input type="password" id="admin-password" value="adminpass" required class="w-full p-3 rounded-lg border">
+                </div>
+                <button type="submit" class="bg-red-600 hover:bg-red-500 text-white w-full p-3 font-semibold rounded-lg">Admin Login</button>
+                 <p id="admin-auth-message" class="text-center mt-3 text-red-500 text-sm"></p>
+                <p class="text-center mt-4 text-sm">
+                    <button type="button" onclick="showLoginScreen('student')" class="text-blue-600 hover:underline">Back to Student Login</button>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="mainDashboard" class="hidden">
+        <!-- FIXED SIDEBAR -->
+        <nav class="sidebar fixed left-0 top-0 h-screen overflow-y-auto pt-5 shadow-lg">
+            <div class="sidebar-header px-4">
+                <h2 class="text-2xl font-bold" style="color: rgb(var(--primary));">🎓 UNISPHERE</h2>
+            </div>
+            <ul class="sidebar-menu mt-4 space-y-2">
+                <li><div class="menu-item active flex items-center rounded-lg mx-3 px-3 py-2 cursor-pointer" data-nav-section="dashboard" onclick="switchSection('dashboardSection')">
+                    <span class="icon mr-3">🏠</span><span>Dashboard</span>
+                </div></li>
+                <li><div class="menu-item flex items-center rounded-lg mx-3 px-3 py-2 cursor-pointer" data-nav-section="academics" onclick="switchSection('academicsSection')">
+                    <span class="icon mr-3">📚</span><span>Academics Hub</span>
+                </div></li>
+                <li><div class="menu-item flex items-center rounded-lg mx-3 px-3 py-2 cursor-pointer" data-nav-section="wellness" onclick="switchSection('wellnessSection')">
+                    <span class="icon mr-3">❤️</span><span>Wellness Center</span>
+                </div></li>
+                <li><div class="menu-item flex items-center rounded-lg mx-3 px-3 py-2 cursor-pointer" data-nav-section="appointments" onclick="switchSection('appointmentsSection')">
+                    <span class="icon mr-3">📅</span><span>Appointments</span>
+                </div></li>
+                <li><div class="menu-item flex items-center rounded-lg mx-3 px-3 py-2 cursor-pointer" data-nav-section="financial" onclick="switchSection('financialSection')">
+                    <span class="icon mr-3">💰</span><span>Financial Aid</span>
+                </div></li>
+                <li id="admin-nav-item" class="hidden"><div class="menu-item flex items-center rounded-lg mx-3 px-3 py-2 cursor-pointer" data-nav-section="admin" onclick="switchSection('adminSection')" style="color: rgb(var(--danger));">
+                    <span class="icon mr-3">⚙️</span><span>Admin Panel</span>
+                </div></li>
+                <li><div class="menu-item flex items-center rounded-lg mx-3 px-3 py-2 text-gray-600 hover:text-gray-900 cursor-pointer" onclick="handleLogout()">
+                    <span class="icon mr-3">👋</span><span>Logout</span>
+                </div></li>
+            </ul>
+            <div class="p-4 text-center mt-5">
+                <button class="btn-primary rounded-full w-full p-2.5 text-sm font-semibold" onclick="openModal('chatbotModal')">
+                    🤖 AI Assistant
+                </button>
+            </div>
+        </nav>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="dashboard-container p-6 md:p-10">
+            <!-- TOP NAVIGATION BAR (New: Includes Profile and Notifications) -->
+            <div id="dashboard-nav" class="flex justify-between items-center mb-6">
+                 <h1 id="main-header-title" class="text-3xl font-extrabold" style="color: rgb(var(--primary));">📊 Dashboard Overview</h1>
+                 
+                 <!-- Profile Dropdown -->
+                <div id="profile-dropdown" class="relative">
+                    <button id="profile-button" onclick="toggleProfileDropdown()" class="flex items-center space-x-2 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition duration-150">
+                        <span class="text-gray-900 font-medium hidden sm:inline" id="user-display-nav">User</span>
+                        <!-- Profile Icon (using inline SVG for robustness) -->
+                        <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span id="unread-notifications-nav" class="inline-flex items-center justify-center w-5 h-5 ml-1 text-xs font-semibold text-white bg-red-500 rounded-full absolute -top-1 -right-1">0</span>
+                    </button>
+
+                    <div id="profile-dropdown-menu" class="absolute z-30 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200">
+                        <div class="py-1">
+                            <div class="block px-4 py-2 text-sm text-gray-700 font-semibold border-b">
+                                <span id="user-display-dropdown">User</span>
+                            </div>
+                            <button onclick="openModal('profileModal'); toggleProfileDropdown()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                My Profile
+                            </button>
+                            <button onclick="openModal('notificationsModal'); toggleProfileDropdown()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center">
+                                Notifications
+                                <span id="unread-notifications-menu" class="inline-flex items-center justify-center px-2 py-0.5 ml-3 text-xs font-medium text-white bg-red-500 rounded-full">0</span>
+                            </button>
+                            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100 border-t mt-1">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-gray-600 mb-6 -mt-4">Welcome back, <span id="user-display" class="font-semibold text-gray-900">User</span>! Current GPA: <span id="gpa-display" class="font-bold text-lg" style="color: rgb(var(--accent));">N/A</span></p>
+
+
+            <!-- ============================================
+                 DASHBOARD SECTION
+                 ============================================ -->
+            <section id="dashboardSection" class="active">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="card-professional p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-2">📚 GPA Goal Progress</h3>
+                        <div class="text-4xl font-extrabold my-3" id="gpa-card-stat" style="color: rgb(var(--accent));">0.00</div>
+                        <p id="gpa-status" class="text-gray-600 text-sm">Progress toward <span id="target-gpa-display" class="font-bold">4.0</span> GPA goal.</p>
+                        <div class="progress-bar h-2 bg-gray-300 rounded-full mt-3">
+                            <div class="h-full rounded-full" id="gpa-progress-fill" style="width: 0%; background-color: rgb(var(--primary));"></div>
+                        </div>
+                    </div>
+
+                    <div class="card-professional hydration-container p-6 rounded-xl shadow-lg text-center">
+                        <h3 class="text-xl font-semibold mb-2">💧 Hydration Tracker</h3>
+                        <div class="text-3xl font-bold text-blue-600 my-3" id="hydration-stat">0/2000 ml</div>
+                        
+                        <div class="water-bottle">
+                            <div class="water-fill" id="water-fill" style="height: 0%; background-color: rgb(var(--primary));"></div>
+                        </div>
+                        <p id="hydration-percent" class="text-gray-600 text-sm">0% of daily goal</p>
+                        
+                        <div class="water-buttons flex justify-center space-x-3 mt-4">
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-sm px-4 py-2" onclick="addWater(250)">+250ml</button>
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-sm px-4 py-2" onclick="addWater(500)">+500ml</button>
+                        </div>
+                    </div>
+
+                    <div class="card-professional p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-2">⏱️ Next Academic Event</h3>
+                        <div class="text-2xl font-bold text-red-600 my-3" id="next-event-title">N/A</div>
+                        <p id="next-event-details" class="text-gray-600 text-sm">Check the Academics Hub for your schedule.</p>
+                        <button class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg w-full mt-4 p-2.5 text-sm" onclick="switchSection('academicsSection')">View Deadlines</button>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="card-professional chart-container p-6 rounded-xl shadow-lg h-96">
+                        <h3 class="text-xl font-semibold mb-4 text-blue-600">📈 Academic Performance</h3>
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                     <div class="card-professional chart-container p-6 rounded-xl shadow-lg h-96">
+                        <h3 class="text-xl font-semibold mb-4 text-red-600">❤️ Mood Trends (History)</h3>
+                        <canvas id="moodChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 ACADEMICS HUB SECTION
+                 ============================================ -->
+            <section id="academicsSection" class="hidden">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-6">
+                    <div class="card-professional rounded-xl shadow-lg p-5 text-center cursor-pointer hover:bg-gray-100" onclick="openModal('studyTimerModal')">
+                        <div class="text-3xl mb-2 text-red-600">⏳</div>
+                        <h4 class="text-lg font-semibold text-red-600">Study Timer</h4>
+                        <p class="text-gray-600 text-sm">Pomodoro and session tracking</p>
+                    </div>
+                    <div class="card-professional rounded-xl shadow-lg p-5 text-center cursor-pointer hover:bg-gray-100" onclick="openModal('quizGeneratorModal')">
+                        <div class="text-3xl mb-2 text-green-600">❓</div>
+                        <h4 class="text-lg font-semibold text-green-600">AI Quiz</h4>
+                        <p class="text-gray-600 text-sm">Generate a quiz on any topic</p>
+                    </div>
+                    <div class="card-professional rounded-xl shadow-lg p-5 text-center cursor-pointer hover:bg-gray-100" onclick="openModal('courseManagementModal')">
+                        <div class="text-3xl mb-2 text-indigo-600">📝</div>
+                        <h4 class="text-lg font-semibold text-indigo-600">Manage Courses</h4>
+                        <p class="text-gray-600 text-sm">Update grades and credits</p>
+                    </div>
+                    <div class="card-professional rounded-xl shadow-lg p-5 text-center cursor-pointer hover:bg-gray-100" onclick="openModal('timetableModal')">
+                        <div class="text-3xl mb-2 text-purple-600">⏰</div>
+                        <h4 class="text-lg font-semibold text-purple-600">Manage Schedule</h4>
+                        <p class="text-gray-600 text-sm">Add/edit class times</p>
+                    </div>
+                    <div class="card-professional rounded-xl shadow-lg p-5 text-center cursor-pointer hover:bg-gray-100" onclick="openModal('goalSettingModal')">
+                        <div class="text-3xl mb-2 text-pink-600">🎯</div>
+                        <h4 class="text-lg font-semibold text-pink-600">Set GPA Goal</h4>
+                        <p class="text-gray-600 text-sm">Track your progress toward a target GPA.</p>
+                    </div>
+                </div>
+
+                <div class="card-professional p-6 rounded-xl shadow-lg mt-6">
+                    <h3 class="text-xl font-semibold mb-4" style="color: rgb(var(--primary));">⏰ Weekly Timetable</h3>
+                    <div id="timetable-display" class="overflow-x-auto">
+                        <p class="text-gray-600">Loading timetable entries...</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="card-professional p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-red-600">🔥 Upcoming Tests & Deadlines</h3>
+                        <ul id="upcoming-tests-list" style="list-style: none; padding-left: 0;" class="text-gray-700 space-y-3">
+                            <li class="text-gray-600">Loading deadlines...</li>
+                        </ul>
+                    </div>
+                    <div class="card-professional p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 text-blue-600">📊 Course List Summary</h3>
+                        <ul id="course-list-summary" style="list-style: none; padding-left: 0;" class="text-gray-700 space-y-3">
+                            <li class="text-gray-600">Loading courses...</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 WELLNESS CENTER SECTION
+                 ============================================ -->
+            <section id="wellnessSection" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card-professional p-6 rounded-xl shadow-lg md:col-span-2">
+                        <h3 class="text-xl font-semibold mb-2" style="color: rgb(var(--accent));">😊 Daily Mood Check-In</h3>
+                        <p class="text-gray-600">How are you feeling right now?</p>
+                        <div class="flex flex-wrap justify-between items-center mt-4 space-x-2">
+                            <!-- Scores 1, 3, 5, 7, 9 mapped to emojis -->
+                            <button class="rounded-xl p-3 text-3xl mood-btn" onclick="logMood(9)" data-score="9" title="Excellent">😁</button>
+                            <button class="rounded-xl p-3 text-3xl mood-btn" onclick="logMood(7)" data-score="7" title="Good">🙂</button>
+                            <button class="rounded-xl p-3 text-3xl mood-btn" onclick="logMood(5)" data-score="5" title="Neutral">😐</button>
+                            <button class="rounded-xl p-3 text-3xl mood-btn" onclick="logMood(3)" data-score="3" title="Struggling">😟</button>
+                            <button class="rounded-xl p-3 text-3xl mood-btn" onclick="logMood(1)" data-score="1" title="Poor">😭</button>
+                        </div>
+                        <p id="mood-log-message" class="text-center mt-3 text-sm" style="color: rgb(var(--accent));">Log your mood to see trends.</p>
+
+                        <!-- AI Suggestion & Face Rec -->
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                             <h4 class="font-bold text-pink-600 mb-2">AI Wellness Suggestion</h4>
+                             <p id="ai-suggestion-text" class="text-sm italic text-gray-700">Checking your mood history...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-professional p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-2 text-red-600">❤️ Counseling & Face Tracker</h3>
+                        <p class="text-gray-600">Book a session with a counselor.</p>
+                        <button class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg w-full mt-6 p-3 text-sm" onclick="openModal('appointmentModal')">Book Counseling</button>
+                        
+                        <div class="mt-4 border-t pt-4">
+                            <h4 class="font-bold text-red-600 mb-2">Face Mood Tracker</h4>
+                            <p class="text-xs text-gray-500 italic">Webcam required for visual tracking.</p>
+                            
+                            
+                            <div id="face-mood-display" class="mt-2 p-2 bg-gray-100 rounded-lg text-center font-bold text-gray-700">
+                                Status: Initializing...
+                            </div>
+                            <button id="webcam-toggle-btn" class="w-full mt-2 p-2 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-lg" onclick="toggleWebcam()">
+                                Start Webcam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-professional chart-container p-6 rounded-xl shadow-lg mt-6 h-96">
+                    <h3 class="text-xl font-semibold mb-4 text-red-600">❤️ Mood Trends (All History)</h3>
+                    <canvas id="wellnessMoodChart"></canvas>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 APPOINTMENTS SECTION
+                 ============================================ -->
+            <section id="appointmentsSection" class="hidden">
+                <div class="dashboard-header">
+                    <h1 class="text-3xl font-extrabold" style="color: rgb(var(--primary));">📅 Upcoming Appointments</h1>
+                    <p class="text-gray-600 mt-2">Schedule and review your upcoming meetings.</p>
+                </div>
+                <div class="card-professional p-6 rounded-xl shadow-lg" style="min-height: 300px;">
+                    <h3 class="text-xl font-semibold mb-4" style="color: rgb(var(--primary));">Upcoming Sessions</h3>
+                    <ul id="appointment-list" style="list-style: none; padding-left: 0;" class="text-gray-700 space-y-3">
+                        <li class="text-gray-600">Loading upcoming appointments...</li>
+                    </ul>
+                </div>
+                
+                <div class="card-professional p-6 rounded-xl shadow-lg mt-6">
+                    <h3 class="text-xl font-semibold mb-4" style="color: rgb(var(--primary));">Book a New Appointment</h3>
+                    <button class="btn-primary w-full p-3 font-semibold rounded-lg" onclick="openModal('appointmentModal')">Schedule Now</button>
+                </div>
+            </section>
+            
+            <!-- ============================================
+                 FINANCIAL AID SECTION
+                 ============================================ -->
+            <section id="financialSection" class="hidden">
+                <div class="dashboard-header">
+                    <h1 class="text-3xl font-extrabold" style="color: rgb(var(--primary));">💰 Financial Aid &amp; Support</h1>
+                    <p class="text-gray-600 mt-2">Comprehensive financial resources for students</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card-professional p-6 rounded-xl shadow-lg md:col-span-2">
+                        <h3 class="text-xl font-semibold mb-2" style="color: rgb(var(--primary));">📊 Monthly Budget Planner</h3>
+                        <p class="text-gray-600">Track your expected monthly income and expenses.</p>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div class="bg-gray-100 p-3 rounded-lg"><p class="text-green-600 font-bold">Income:</p><p id="income-total" class="text-2xl text-gray-900">$0.00</p></div>
+                            <div class="bg-gray-100 p-3 rounded-lg"><p class="text-red-600 font-bold">Expenses:</p><p id="expense-total" class="text-2xl text-gray-900">$0.00</p></div>
+                            <div class="col-span-2 bg-gray-100 p-3 rounded-lg"><p class="text-yellow-600 font-bold">Net Balance:</p><p id="net-balance" class="text-3xl text-gray-900 font-extrabold">$0.00</p></div>
+                        </div>
+                        
+                        <button class="btn-primary w-full p-3 font-semibold rounded-lg mt-6" onclick="openModal('financialModal')">Edit Budget & Plan</button>
+                    </div>
+                    
+                    <div class="card-professional chart-container p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4" style="color: rgb(var(--accent));">💸 Expense Breakdown</h3>
+                        <div class="h-48 flex items-center justify-center">
+                            <canvas id="budgetPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ============================================
+                 ADMIN SECTION (ADMIN ONLY)
+                 ============================================ -->
+             <section id="adminSection" class="hidden">
+                <div class="dashboard-header">
+                    <h1 class="text-3xl font-extrabold text-red-600">⚙️ Admin Control Panel</h1>
+                    <p class="text-gray-600 mt-2">Manage all users, schedules, and academic records.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card-professional p-6 rounded-xl cursor-pointer hover:bg-gray-100 shadow-lg" onclick="openModal('adminUsersModal')">
+                        <h3 class="text-xl font-semibold mb-2 text-green-600">👥 Manage Users</h3>
+                        <p class="text-gray-600">View and modify all student accounts.</p>
+                        <button class="bg-green-600 hover:bg-green-700 text-white w-full p-3 text-sm font-semibold rounded-lg mt-4">View All</button>
+                    </div>
+                    <div class="card-professional p-6 rounded-xl cursor-pointer hover:bg-gray-100 shadow-lg" onclick="openModal('adminTimetableModal')">
+                        <h3 class="text-xl font-semibold mb-2 text-blue-600">⏰ Manage Timetable</h3>
+                        <p class="text-gray-600">Add/edit class schedules for any student.</p>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white w-full p-3 text-sm font-semibold rounded-lg mt-4">Set Schedules</button>
+                    </div>
+                    <div class="card-professional p-6 rounded-xl cursor-pointer hover:bg-gray-100 shadow-lg" onclick="openModal('adminTestsModal')">
+                        <h3 class="text-xl font-semibold mb-2 text-red-600">🔥 Manage Tests/Deadlines</h3>
+                        <p class="text-gray-600">Add/remove/update all tests and assignments.</p>
+                        <button class="bg-red-600 hover:bg-red-700 text-white w-full p-3 text-sm font-semibold rounded-lg mt-4">Set Deadlines</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ============================================
+         MODALS (All modals are defined here)
+         ============================================ -->
+         
+    <!-- NEW: Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-md">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-pink-600">👤 My Profile</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('profileModal')">&times;</button>
+            </div>
+            
+            <div class="text-center mb-6">
+                <div class="text-6xl mb-2">🎓</div>
+                <p class="text-2xl font-bold text-gray-900" id="profile-username">User</p>
+                <p class="text-sm text-gray-600">Current User</p>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="flex justify-between p-3 bg-gray-100 rounded-lg">
+                    <span class="font-semibold text-gray-700">Account Type:</span>
+                    <span id="profile-admin-status" class="font-bold text-green-600">Student</span>
+                </div>
+                <div class="flex justify-between p-3 bg-gray-100 rounded-lg">
+                    <span class="font-semibold text-gray-700">Current GPA:</span>
+                    <span id="profile-gpa" class="font-bold text-purple-600">N/A</span>
+                </div>
+            </div>
+            <button onclick="handleLogout()" class="bg-red-600 hover:bg-red-700 text-white w-full p-3 font-semibold rounded-lg mt-6">Log Out</button>
+        </div>
+    </div>
+
+
+    <!-- NEW: Study Timer Modal -->
+    <div id="studyTimerModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-md text-center">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-red-600">⏳ Study Timer (Pomodoro)</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('studyTimerModal')">&times;</button>
+            </div>
+            
+            <div class="mb-6">
+                <label for="study-topic-input" class="block mb-2 text-gray-700 font-semibold">What are you studying?</label>
+                <input type="text" id="study-topic-input" placeholder="e.g., Calculus II, Python Functions" class="w-full p-3 rounded-lg border text-center text-gray-900">
+            </div>
+
+            <div id="timer-display" class="font-mono mb-6">25:00</div>
+            
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="timer-start-btn" onclick="startTimer()" class="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full p-3 w-24">Start</button>
+                <button id="timer-pause-btn" onclick="stopTimer()" class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-full p-3 w-24 hidden">Pause</button>
+                <button id="timer-reset-btn" onclick="resetTimer()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-full p-3 w-24">Reset</button>
+                <button id="timer-log-btn" onclick="logSession()" class="btn-primary font-semibold rounded-full p-3 w-24 hidden">Log</button>
+            </div>
+
+            <div class="border-t pt-4">
+                 <h3 class="text-lg font-semibold mb-2 text-gray-700">Recent Sessions</h3>
+                 <div id="study-session-list" class="text-sm max-h-32 overflow-y-auto">
+                     <p class="text-gray-500">No sessions logged yet.</p>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: AI Quiz Generator Modal -->
+    <div id="quizGeneratorModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-green-600">❓ AI Quiz Generator</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('quizGeneratorModal')">&times;</button>
+            </div>
+
+            <form id="quiz-form" onsubmit="handleGenerateQuiz(event)" class="mb-6 border-b pb-4">
+                <div class="mb-4">
+                    <label for="quiz-topic" class="block mb-1 text-gray-700 font-semibold">Topic for the Quiz (e.g., "Mitochondria functions" or "Basic SQL commands")</label>
+                    <input type="text" id="quiz-topic" required class="w-full p-3 rounded-lg border text-gray-900" placeholder="Enter topic here...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="quiz-count" class="block mb-1 text-gray-700 font-semibold">Number of Questions</label>
+                        <input type="number" id="quiz-count" value="3" min="1" max="10" required class="w-full p-3 rounded-lg border text-gray-900">
+                    </div>
+                    <div>
+                        <label for="quiz-level" class="block mb-1 text-gray-700 font-semibold">Difficulty Level</label>
+                        <select id="quiz-level" required class="w-full p-3 rounded-lg border text-gray-900">
+                            <option>Beginner</option><option selected>Intermediate</option><option>Expert</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full p-3 font-semibold rounded-lg mt-4" id="generate-quiz-btn">Generate Quiz</button>
+                <p id="quiz-status" class="text-center mt-3 text-sm text-red-600"></p>
+            </form>
+
+            <!-- Quiz Results/Viewer -->
+            <div id="quiz-results" class="space-y-6">
+                <h3 class="text-xl font-bold text-gray-700 border-b pb-2" id="quiz-title-display">Ready for a Quiz!</h3>
+                <div id="quiz-container" class="space-y-6">
+                    <p class="text-gray-500 text-center">Your generated quiz will appear here.</p>
+                </div>
+                
+                <div id="quiz-actions" class="flex flex-wrap justify-between gap-3 pt-2">
+                    <button onclick="checkQuizAnswers()" id="check-quiz-btn" class="bg-blue-600 hover:bg-blue-700 text-white p-3 font-semibold rounded-lg hidden flex-1 min-w-[40%]">Check Answers</button>
+                    <button onclick="resetQuizState('topic')" id="quiz-back-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-3 font-semibold rounded-lg hidden flex-1 min-w-[25%]">Back to Topic</button>
+                    <button onclick="resetQuizState('new')" id="quiz-play-again-btn" class="bg-green-600 hover:bg-green-700 text-white p-3 font-semibold rounded-lg hidden flex-1 min-w-[25%]">Play Again</button>
+                </div>
+                
+                <div id="quiz-score" class="text-center text-2xl font-bold mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Appointment Booking Modal (Student) -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-md">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-blue-600">📅 Book New Session</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('appointmentModal')">&times;</button>
+            </div>
+            <form id="appointmentForm" onsubmit="handleAppointmentBooking(event)">
+                <div class="mb-4">
+                    <label class="block mb-1 text-gray-700">Appointment Type</label>
+                    <select id="app-type" required class="p-3 rounded-lg w-full border">
+                        <option value="Counseling">Wellness Counseling</option>
+                        <option value="Advisor">Academic Advisor</option>
+                        <option value="Faculty">Faculty Meeting</option>
+                        <option value="Career">Career Counselor</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block mb-1 text-gray-700">Date</label>
+                        <input type="date" id="app-date" required class="p-3 rounded-lg w-full border">
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-gray-700">Time</label>
+                        <input type="time" id="app-time" required class="p-3 rounded-lg w-full border">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block mb-1 text-gray-700">Details / Reason</label>
+                    <textarea id="app-details" rows="3" class="p-3 rounded-lg w-full border"></textarea>
+                </div>
+                <button type="submit" class="btn-primary w-full p-3 font-semibold rounded-lg">Confirm Booking</button>
+                <p id="appointment-message" class="text-center mt-3 text-sm"></p>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Course Management Modal (Student) -->
+    <div id="courseManagementModal" class="modal">
+        <div class="modal-content p-8" style="max-width: 800px;">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-blue-600">📝 Manage Courses & Grades</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('courseManagementModal')">&times;</button>
+            </div>
+            
+            <h3 class="text-xl font-semibold mb-4 text-blue-600">Your Active Courses</h3>
+            <div id="course-management-list" class="mb-6 space-y-3 max-h-60 overflow-y-auto pr-2">
+                <p class="text-gray-600">Loading courses...</p>
+            </div>
+            
+            <h3 class="text-xl font-semibold mb-4 text-red-600 border-t border-gray-300 pt-4">Add New Course</h3>
+            <form id="addCourseForm" onsubmit="handleAddCourse(event)">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="text-sm block mb-1 text-gray-700">Course Title</label>
+                        <input type="text" id="new-course-title" required class="p-2 rounded-lg w-full border">
+                    </div>
+                    <div>
+                        <label class="text-sm block mb-1 text-gray-700">Score (%)</label>
+                        <input type="number" id="new-course-score" min="0" max="100" value="0" required class="p-2 rounded-lg w-full border">
+                    </div>
+                    <div>
+                        <label class="text-sm block mb-1 text-gray-700">Credits</label>
+                        <input type="number" id="new-course-credits" min="0.5" step="0.5" value="3.0" required class="p-2 rounded-lg w-full border">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary rounded-lg mt-4 p-3 font-semibold">Add Course</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- NEW: Student Timetable Management Modal -->
+    <div id="timetableModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-purple-600">⏰ Manage Your Class Schedule</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('timetableModal')">&times;</button>
+            </div>
+            
+            <h3 class="text-xl font-semibold mb-3 text-red-600 border-b border-gray-300 pb-2">Add New Class</h3>
+            <form id="addTimetableForm" onsubmit="handleAddTimetable(event)" class="mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                    <div class="md:col-span-2">
+                        <label for="tt-course-title-student" class="text-sm block mb-1 text-gray-700">Course Title</label>
+                        <input type="text" id="tt-course-title-student" required class="p-2 rounded-lg w-full border">
+                    </div>
+                    <div>
+                        <label for="tt-day-student" class="text-sm block mb-1 text-gray-700">Day</label>
+                        <select id="tt-day-student" required class="p-2 rounded-lg w-full border">
+                            <option value="">Select Day</option>
+                            <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tt-start-student" class="text-sm block mb-1 text-gray-700">Start Time</label>
+                        <input type="time" id="tt-start-student" required class="p-2 rounded-lg w-full border">
+                    </div>
+                    <div>
+                        <label for="tt-end-student" class="text-sm block mb-1 text-gray-700">End Time</label>
+                        <input type="time" id="tt-end-student" required class="p-2 rounded-lg w-full border">
+                    </div>
+                </div>
+                <div class="form-group mb-4">
+                    <label for="tt-location-student" class="text-sm block mb-1 text-gray-700">Location (Optional)</label>
+                    <input type="text" id="tt-location-student" placeholder="e.g., Science Hall 205" class="p-2 rounded-lg w-full border">
+                </div>
+                <button type="submit" class="btn-primary p-3 font-semibold rounded-lg">Add Class</button>
+                <p id="timetable-message" class="text-center mt-3 text-red-600 text-sm"></p>
+            </form>
+            
+            <h3 class="text-xl font-semibold mb-3 text-purple-600 border-t border-gray-300 pt-4">Current Schedule</h3>
+            <div id="student-timetable-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                <p class="text-gray-600">Loading current schedule...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- NEW: GPA Goal Setting Modal -->
+    <div id="goalSettingModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-md">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-pink-600">🎯 Set Target GPA</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('goalSettingModal')">&times;</button>
+            </div>
+            <form id="gpaGoalForm" onsubmit="handleGpaGoalUpdate(event)">
+                <div class="mb-6">
+                    <label for="target-gpa-input" class="block mb-2 text-gray-700 text-lg font-semibold">What is your goal GPA? (0.0 to 4.0)</label>
+                    <input type="number" id="target-gpa-input" step="0.01" min="0.00" max="4.00" required class="w-full p-3 rounded-lg border text-3xl text-center font-bold">
+                    <p class="text-gray-600 mt-2 text-sm">Setting a goal helps track your academic performance.</p>
+                </div>
+                <button type="submit" class="btn-primary w-full p-3 font-semibold rounded-lg">Save Goal</button>
+                <p id="gpa-goal-message" class="text-center mt-3 text-sm"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Financial Planner Modal (Student) -->
+    <div id="financialModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-6 text-green-600">💰 Monthly Budget Planner</h2>
+            <p class="mb-4 text-gray-600">Enter your expected monthly figures for <span id="current-month-display" class="font-bold text-gray-900"></span></p>
+
+            <form id="financial-planner-form" onsubmit="handleFinancialUpdate(event)">
+                <div class="space-y-4 mb-6">
+                    <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg border-l-4 border-green-500">
+                        <label for="income-input" class="font-semibold text-green-600">Total Income ($)</label>
+                        <input type="number" id="income-input" data-category="income" placeholder="0.00" min="0" required class="financial-input w-32 p-2 rounded-lg border text-right">
+                    </div>
+                    <h4 class="text-lg font-semibold text-red-600 border-b border-gray-300 pb-2 pt-2">Monthly Expenses (Estimated)</h4>
+                    
+                    <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg"><label for="rent-input">Rent/Housing ($)</label><input type="number" id="rent-input" data-category="rent" placeholder="0.00" min="0" class="financial-input w-32 p-2 rounded-lg border text-right"></div>
+                    <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg"><label for="food-input">Food/Groceries ($)</label><input type="number" id="food-input" data-category="food" placeholder="0.00" min="0" class="financial-input w-32 p-2 rounded-lg border text-right"></div>
+                    <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg"><label for="utilities-input">Utilities ($)</label><input type="number" id="utilities-input" data-category="utilities" placeholder="0.00" min="0" class="financial-input w-32 p-2 rounded-lg border text-right"></div>
+                    <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg"><label for="transport-input">Transport ($)</label><input type="number" id="transport-input" data-category="transport" placeholder="0.00" min="0" class="financial-input w-32 p-2 rounded-lg border text-right"></div>
+                    <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg"><label for="other-input">Other/Savings ($)</label><input type="number" id="other-input" data-category="other" placeholder="0.00" min="0" class="financial-input w-32 p-2 rounded-lg border text-right"></div>
+                </div>
+                
+                <p id="financial-message" class="text-center mt-3 mb-3 text-sm text-red-600"></p>
+                
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeModal('financialModal')" class="py-3 px-6 rounded-lg bg-gray-400 hover:bg-gray-500 text-gray-900">Close</button>
+                    <button type="submit" class="btn-primary py-3 px-6 rounded-lg">Save Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-content p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-violet-600">🔔 Notifications</h2>
+                <button onclick="markAllNotificationsRead()" class="text-sm text-gray-600 hover:text-violet-600 transition">Mark All as Read</button>
+            </div>
+            
+            <div id="notification-list" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                <p class="text-gray-600 text-center">Loading notifications...</p>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button type="button" onclick="closeModal('notificationsModal')" class="py-2 px-4 rounded-lg bg-gray-400 hover:bg-gray-500 text-gray-900">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Chatbot Modal (NEW) -->
+    <div id="chatbotModal" class="modal">
+        <div class="modal-content p-6 w-full max-w-lg flex flex-col h-[80vh] sm:h-[600px]">
+            <h2 class="text-2xl font-bold mb-4 text-pink-600">🤖 UNISPHERE AI Assistant</h2>
+            
+            <div id="chat-messages" class="flex-1 overflow-y-auto border-y border-gray-300 py-4 space-y-4 mb-4">
+                <div class="chat-message bot text-left">
+                    <span class="font-bold text-pink-600">AI:</span> 
+                    <span class="p-3 rounded-xl rounded-bl-none inline-block whitespace-pre-wrap" style="background-color: rgb(243 232 255);">Hello! I'm your academic and wellness assistant. You can ask me questions about your data (e.g., "What is my GPA?"), general study help, or ask me to **"add 300ml of water"** to log hydration.</span>
+                </div>
+            </div>
+            
+            <form id="chat-form" onsubmit="handleChatSubmit(event)">
+                <div class="flex space-x-3">
+                    <input type="text" id="chat-input" placeholder="Ask a question..." required class="flex-1 p-3 rounded-lg border focus:ring-2 focus:ring-pink-500">
+                    <button type="submit" class="btn-primary py-3 px-4 rounded-lg">Send</button>
+                </div>
+                <p id="chat-status" class="text-xs mt-2 text-red-600 text-center"></p>
+            </form>
+
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="closeModal('chatbotModal')" class="py-2 px-4 rounded-lg bg-gray-400 hover:bg-gray-500 text-gray-900">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Modals (Remaining Admin modals are simplified for this update) -->
+    <div id="adminUsersModal" class="modal">
+        <div class="modal-content p-8" style="max-width: 900px;">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-green-600">👥 Admin: Manage Users</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('adminUsersModal')">&times;</button>
+            </div>
+            
+            <table class="min-w-full divide-y divide-gray-300 text-gray-900">
+                <thead><tr class="bg-gray-200"><th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ID</th><th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Username</th><th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">GPA</th><th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Admin</th><th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th></tr></thead>
+                <tbody id="admin-user-list" class="divide-y divide-gray-300">
+                    <tr><td colspan="5" class="p-3 text-center">Loading users...</td></tr>
+                </tbody>
+            </table>
+            
+            <div class="mt-6 flex justify-end">
+                 <button class="bg-gray-400 hover:bg-gray-500 text-gray-900 font-semibold rounded-lg p-3" onclick="closeModal('adminUsersModal')">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="adminTimetableModal" class="modal">
+        <div class="modal-content p-8" style="max-width: 1000px;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-blue-600">⏰ Admin: Manage Timetables</h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('adminTimetableModal')">&times;</button>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-red-600">Add New Timetable Entry</h3>
+            <form id="adminAddTimetableForm" onsubmit="adminAddTimetable(event)" class="mb-6 border-b border-gray-300 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mb-4">
+                    <div><label for="tt-user-id" class="text-sm block mb-1 text-gray-700">User ID</label><input type="number" id="tt-user-id" required class="p-2 rounded-lg w-full border"></div>
+                    <div><label for="tt-course-title" class="text-sm block mb-1 text-gray-700">Course</label><input type="text" id="tt-course-title" required class="p-2 rounded-lg w-full border"></div>
+                    <div><label for="tt-day" class="text-sm block mb-1 text-gray-700">Day</label><select id="tt-day" required class="p-2 rounded-lg w-full border">
+                        <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+                    </select></div>
+                    <div><label for="tt-start" class="text-sm block mb-1 text-gray-700">Start Time</label><input type="time" id="tt-start" required class="p-2 rounded-lg w-full border"></div>
+                    <div><label for="tt-end" class="text-sm block mb-1 text-gray-700">End Time</label><input type="time" id="tt-end" required class="p-2 rounded-lg w-full border"></div>
+                    <div class="md:col-span-2"><label for="tt-location" class="text-sm block mb-1 text-gray-700">Location</label><input type="text" id="tt-location" class="p-2 rounded-lg w-full border"></div>
+                </div>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white p-3 font-semibold rounded-lg">Add Entry</button>
+                <p id="admin-tt-message" class="text-center mt-3 text-red-600 text-sm"></p>
+            </form>
+            <div id="admin-timetable-table-container" class="max-h-[50vh] overflow-y-auto">
+                <p class="text-gray-600 text-center py-4">Loading all timetable entries...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="adminTestsModal" class="modal">
+        <div class="modal-content p-8" style="max-width: 1000px;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-red-600">🔥 Admin: Manage Tests & Deadlines </h2>
+                <button class="text-gray-600 hover:text-gray-900 text-3xl" onclick="closeModal('adminTestsModal')">&times;</button>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-blue-600">Add New Test/Deadline</h3>
+            <form id="adminAddTestForm" onsubmit="adminAddTest(event)" class="mb-6 border-b border-gray-300 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                    <div><label for="test-user-id" class="text-sm block mb-1 text-gray-700">User ID</label><input type="number" id="test-user-id" required class="p-2 rounded-lg w-full border"></div>
+                    <div><label for="test-course-title" class="text-sm block mb-1 text-gray-700">Course</label><input type="text" id="test-course-title" required class="p-2 rounded-lg w-full border"></div>
+                    <div><label for="test-type" class="text-sm block mb-1 text-gray-700">Type</label><select id="test-type" required class="p-2 rounded-lg w-full border">
+                        <option>Midterm</option><option>Final</option><option>Quiz</option><option>Assignment</option>
+                    </select></div>
+                    <div class="md:col-span-2"><label for="test-due-date" class="text-sm block mb-1 text-gray-700">Due Date/Time</label><input type="datetime-local" id="test-due-date" required class="p-2 rounded-lg w-full border"></div>
+                </div>
+                <div class="form-group mb-4"><label for="test-details" class="text-sm block mb-1 text-gray-700">Details</label><input type="text" id="test-details" placeholder="e.g., Covers Ch. 1-4" class="p-2 rounded-lg w-full border"></div>
+                <button type="submit" class="btn-primary p-3 font-semibold rounded-lg">Add Test</button>
+                <p id="admin-test-message" class="text-center mt-3 text-red-600 text-sm"></p>
+            </form>
+            <div id="admin-tests-table-container" class="max-h-[50vh] overflow-y-auto">
+                <p class="text-gray-600 text-center py-4">Loading all tests and deadlines...</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- GLOBAL STATE ---
+        const API_BASE = window.location.origin;
+        let isAdmin = false;
+        let dashboardData = {};
+        
+        // Chart Instances (FIXED: Declared globally for proper destruction)
+        let moodChartInstance = null;
+        let performanceChartInstance = null;
+        let budgetChartInstance = null;
+        let wellnessMoodChartInstance = null; 
+        
+        // Timer State
+        let timerInterval = null;
+        let totalSeconds = 25 * 60; // Default to 25 minutes (Pomodoro)
+        let isRunning = false;
+        let startTime = null;
+        let sessionTopic = '';
+
+        // Quiz State
+        let currentQuizData = []; // Stores the correct quiz data for checking answers
+
+        // Webcam State
+        let webcamStream = null;
+        let isWebcamActive = false;
+
+        // --- GEMINI API CONFIGURATION (AS EXPLICITLY REQUESTED) ---
+        // NOTE: The API key must be an empty string for the execution environment to inject the key.
+        const GEMINI_API_KEY = "AIzaSyAts6WBJfgUSwC81yWqeJ9TMjdsQeuUjKE";
+        const GEMINI_MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
+        
+        // --- UTILITY FUNCTIONS ---
+        function getEl(id) { return document.getElementById(id); }
+
+        function toggleProfileDropdown() {
+            const dropdown = getEl('profile-dropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function showMessage(elementId, message, isError = false) {
+            const el = getEl(elementId);
+            if (!el) return;
+            
+            if (elementId === 'message-box') {
+                const textEl = getEl('message-text');
+                const box = el;
+                
+                clearTimeout(window.messageTimeout);
+                box.classList.add('hidden');
+                
+                textEl.textContent = message;
+                const dangerColor = `rgb(var(--danger))`;
+                const accentColor = `rgb(var(--primary))`;
+                
+                box.style.backgroundColor = isError ? dangerColor : accentColor;
+                box.style.boxShadow = isError ? `0 4px 15px rgba(var(--danger), 0.4)` : `0 4px 15px rgba(var(--primary), 0.4)`;
+                
+                box.classList.remove('hidden');
+                window.messageTimeout = setTimeout(() => {
+                    box.classList.add('hidden');
+                }, 4000);
+                
+                getEl('message-close-btn').onclick = () => {
+                    box.classList.add('hidden');
+                    clearTimeout(window.messageTimeout);
+                };
+            } else {
+                el.textContent = message;
+                el.className = isError ? 'text-center text-sm mt-3 text-red-600' : 'text-center text-sm mt-3 text-green-600';
+            }
+        }
+        
+        // Notification on data change is handled by a call to showMessage('message-box', ...)
+
+        function switchSection(viewId) {
+            // Stop webcam if leaving the wellness section
+            if (getEl('wellnessSection') && !getEl(viewId).isEqualNode(getEl('wellnessSection')) && isWebcamActive) {
+                toggleWebcam(false); 
+            }
+            
+            document.querySelectorAll('main section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            const targetSection = getEl(viewId);
+            if (targetSection) targetSection.classList.remove('hidden');
+            
+            document.querySelectorAll('.menu-item').forEach(link => link.classList.remove('active'));
+            
+            const sectionName = viewId.replace('Section', '');
+            const activeLink = document.querySelector(`[data-nav-section="${sectionName}"]`);
+            if (activeLink) activeLink.classList.add('active');
+            
+            const titleMap = {
+                'dashboardSection': '📊 Dashboard Overview',
+                'adminSection': '⚙️ Admin Control Dashboard',
+                'academicsSection': '📚 Academics Hub',
+                'wellnessSection': '❤️ Wellness Center',
+                'appointmentsSection': '📅 Upcoming Appointments',
+                'financialSection': '💰 Financial Aid & Support',
+            };
+            document.getElementById('main-header-title').textContent = titleMap[viewId] || 'Dashboard';
+
+            if (viewId === 'adminSection') {
+                fetchAdminUsers();
+            } else if (viewId === 'financialSection') {
+                fetchFinancialData();
+            } else if (viewId === 'wellnessSection') {
+                fetchMoodSuggestion();
+            }
+        }
+
+        // --- AUTHENTICATION & INITIAL SETUP ---
+        function showSignup() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.remove('hidden');
+            document.getElementById('adminLoginForm').classList.add('hidden');
+            document.getElementById('auth-title').textContent = '📝 New User Signup';
+        }
+
+        function showLoginScreen(type) {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('adminLoginForm').classList.add('hidden');
+            
+            if (type === 'student') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('auth-title').textContent = '🔐 Student Login';
+            } else {
+                document.getElementById('adminLoginForm').classList.remove('hidden');
+                document.getElementById('auth-title').textContent = '🔑 Admin Login';
+            }
+            document.getElementById('auth-message').textContent = '';
+            document.getElementById('signup-message').textContent = '';
+            document.getElementById('admin-auth-message').textContent = '';
+        }
+        
+        function showAdminLogin() { showLoginScreen('admin'); }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            showMessage('auth-message', 'Logging in...', false);
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    finalizeLogin(data.is_admin);
+                } else if (response.status === 403) {
+                    showMessage('auth-message', 'Use the dedicated Admin Login page for this user.', true);
+                } else {
+                    showMessage('auth-message', data.message || 'Login failed. Check credentials.', true);
+                }
+            } catch (error) {
+                console.error('Login Error:', error);
+                showMessage('auth-message', 'Network error or backend is down.', true);
+            }
+        }
+        
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            
+            showMessage('admin-auth-message', 'Logging in...', false);
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    finalizeLogin(data.is_admin);
+                } else {
+                    showMessage('admin-auth-message', data.message || 'Admin login failed. Check credentials.', true);
+                }
+            } catch (error) {
+                console.error('Admin Login Error:', error);
+                showMessage('admin-auth-message', 'Network error or backend is down.', true);
+            }
+        }
+        
+        async function handleSignup(event) {
+            event.preventDefault();
+            const username = document.getElementById('new-username').value;
+            const password = document.getElementById('new-password').value;
+            
+            showMessage('signup-message', 'Creating account...', false);
+
+            try {
+                const response = await fetch(`${API_BASE}/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showMessage('message-box', 'Account created! Logging you in...', false);
+                    finalizeLogin(data.is_admin);
+                } else {
+                    showMessage('signup-message', data.message || 'Signup failed.', true);
+                }
+            } catch (error) {
+                console.error('Signup Error:', error);
+                showMessage('signup-message', 'Network error or backend is down.', true);
+            }
+        }
+
+        function finalizeLogin(is_admin) {
+            isAdmin = is_admin;
+            
+            document.getElementById('authPage').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            
+            const adminNavItem = document.getElementById('admin-nav-item');
+            
+            if (adminNavItem) {
+                if (isAdmin) {
+                    adminNavItem.classList.remove('hidden');
+                    switchSection('adminSection');
+                } else {
+                    adminNavItem.classList.add('hidden');
+                    switchSection('dashboardSection');
+                }
+            } else {
+                 switchSection('dashboardSection');
+            }
+            
+            fetchDashboardData();
+        }
+        
+        async function handleLogout() {
+            try {
+                await fetch(`${API_BASE}/logout`);
+                isAdmin = false;
+                dashboardData = {};
+                window.location.reload(); 
+            } catch (error) {
+                console.error('Logout error, but redirecting anyway:', error);
+                window.location.reload();
+            }
+        }
+
+
+        // --- DATA FETCHING & UI UPDATES ---
+
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/dashboard`);
+                if (!response.ok) {
+                    if (response.status === 401) { throw new Error('401 Unauthorized'); }
+                    throw new Error('Failed to fetch dashboard data');
+                }
+                const data = await response.json();
+                dashboardData = data; 
+                
+                // Update User Info (Using optional chaining for safety)
+                const username = data.user?.username ?? 'User';
+                document.getElementById('user-display').textContent = username;
+                document.getElementById('user-display-nav').textContent = username;
+                document.getElementById('user-display-dropdown').textContent = username;
+                
+                // FIX: Use optional chaining and nullish coalescing for safe rendering
+                const currentGpa = data.user?.gpa ?? 0.0;
+                // NOTE: target_gpa is not provided by the API, defaulting to 4.0 or using a stored value if implemented.
+                const targetGpa = dashboardData.user?.target_gpa ?? 4.0; 
+                
+                document.getElementById('gpa-display').textContent = currentGpa.toFixed(2);
+                document.getElementById('gpa-card-stat').textContent = currentGpa.toFixed(2);
+                getEl('profile-gpa').textContent = currentGpa.toFixed(2);
+                getEl('profile-username').textContent = username;
+                getEl('profile-admin-status').textContent = data.user?.is_admin ? 'Admin' : 'Student';
+                
+                // Update UI Components
+                updateNotificationBadge(data.notifications?.unread_count ?? 0);
+                updateHydrationUI(data.wellness?.hydration_ml ?? 0, data.wellness?.goal_ml ?? 2000);
+                updateMoodUI(data.wellness?.mood_history ?? []);
+                renderCourseSummaries(data.courses ?? []);
+                renderUpcomingTests(data.upcoming_tests ?? []);
+                renderTimetable(data.timetable ?? []);
+                updateAppointmentUI(data.appointments ?? []);
+                renderStudySessions(data.study_sessions ?? []);
+                
+                // New: GPA Goal Progress
+                updateGpaGoalUI(currentGpa, targetGpa);
+                
+                // Initialize Charts (runs last)
+                initializeCharts(data.courses ?? [], data.wellness?.mood_history ?? [], data.finance ?? []);
+                
+                // Determine next academic event
+                updateNextEvent(data.upcoming_tests ?? [], data.appointments ?? []);
+                
+                // Fetch suggestion after all data is loaded
+                if (document.querySelector('#wellnessSection:not(.hidden)')) {
+                    fetchMoodSuggestion();
+                }
+
+            } catch (error) {
+                console.error('Dashboard Fetch Error:', error);
+                if (error.message.includes('401')) {
+                    document.getElementById('authPage').classList.remove('hidden');
+                    document.getElementById('mainDashboard').classList.add('hidden');
+                    return;
+                }
+                if (document.getElementById('mainDashboard').classList.contains('hidden') === false) {
+                    showMessage('message-box', `Error loading data: ${error.message}. Please try refreshing.`, true);
+                }
+            }
+        }
+
+        // NEW: Render Study Sessions
+        function renderStudySessions(sessions) {
+            const listEl = getEl('study-session-list');
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+
+            if (sessions.length === 0) {
+                 listEl.innerHTML = '<p class="text-gray-500">No sessions logged yet.</p>';
+                 return;
+            }
+
+            sessions.forEach(session => {
+                const durationMinutes = Math.round(session.duration_seconds / 60);
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 rounded-md bg-gray-100';
+                div.innerHTML = `
+                    <span class="font-semibold text-gray-900 text-sm">${session.topic || 'General Study'}</span>
+                    <span class="text-xs text-red-600">${durationMinutes} min</span>
+                `;
+                listEl.appendChild(div);
+            });
+        }
+        
+        function updateGpaGoalUI(currentGpa, targetGpa) {
+            // FIX: currentGpa and targetGpa are already safely passed as numbers (or 0.0/4.0)
+            const current = currentGpa; 
+            const target = targetGpa;
+            
+            const targetGpaDisplayEl = getEl('target-gpa-display');
+            if (targetGpaDisplayEl) targetGpaDisplayEl.textContent = target.toFixed(2);
+            
+            let progress = 0;
+            
+            // Calculate progress carefully
+            if (target > 0) {
+                progress = Math.min((current / target) * 100, 100);
+            }
+            
+            const fillEl = getEl('gpa-progress-fill');
+            if (fillEl) {
+                fillEl.style.width = `${progress.toFixed(0)}%`;
+                
+                // Re-apply classes dynamically based on progress
+                fillEl.className = `h-full rounded-full`;
+                if (progress >= 100) {
+                     fillEl.style.backgroundColor = 'rgb(52 211 163)'; /* Green-400 */
+                } else {
+                     fillEl.style.backgroundColor = 'rgb(var(--primary))'; /* Pink */
+                }
+            }
+            
+            const statusEl = getEl('gpa-status');
+            if (statusEl) statusEl.textContent = `Progress toward ${target.toFixed(2)} GPA goal. (${progress.toFixed(0)}%)`;
+            
+            const inputEl = getEl('target-gpa-input');
+            if (inputEl) inputEl.value = target.toFixed(2);
+        }
+
+        async function handleGpaGoalUpdate(event) {
+            event.preventDefault();
+            const input = getEl('target-gpa-input');
+            const target_gpa = parseFloat(input.value);
+            const messageEl = getEl('gpa-goal-message');
+
+            if (isNaN(target_gpa) || target_gpa < 0 || target_gpa > 4.0) {
+                showMessage('gpa-goal-message', 'Please enter a valid GPA between 0.0 and 4.0.', true);
+                return;
+            }
+
+            // Show loading message *inside* the modal
+            if (messageEl) messageEl.textContent = 'Saving goal...';
+
+            // Simulated success: update local state and UI
+            dashboardData.user = dashboardData.user || {};
+            dashboardData.user.target_gpa = target_gpa;
+            updateGpaGoalUI(dashboardData.user.gpa, target_gpa);
+            showMessage('message-box', `Goal set locally to ${target_gpa.toFixed(2)}!`, false);
+            if (messageEl) messageEl.textContent = ''; 
+            closeModal('goalSettingModal');
+        }
+
+        function updateNextEvent(tests, appointments) {
+            const events = [...tests, ...appointments];
+            events.sort((a, b) => new Date(a.due_date || a.date_time) - new Date(b.due_date || b.date_time));
+            
+            const titleEl = getEl('next-event-title');
+            const detailsEl = getEl('next-event-details');
+            
+            // FIX: Safely check for elements before setting content
+            if (!titleEl || !detailsEl) return;
+
+            if (events.length > 0) {
+                const nextEvent = events[0];
+                const isTest = !!nextEvent.due_date; // Check if it's a test (due_date) vs appointment (date_time)
+                const type = isTest ? (nextEvent.type || 'Deadline') : nextEvent.type;
+                const title = nextEvent.course_title || nextEvent.type;
+                const dt = new Date(nextEvent.due_date || nextEvent.date_time);
+                const timeStr = dt.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+
+                titleEl.textContent = title;
+                detailsEl.textContent = `${type} on ${timeStr}`;
+            } else {
+                titleEl.textContent = 'Free Time!';
+                detailsEl.textContent = 'No upcoming events or deadlines found.';
+            }
+        }
+
+        function updateHydrationUI(current, goal) {
+            const percent = Math.min((current / goal) * 100, 100);
+            document.getElementById('hydration-stat').textContent = `${current} / ${goal} ml`;
+            document.getElementById('hydration-percent').textContent = `${Math.round(percent)}% of daily goal`;
+            
+            const waterFillEl = document.getElementById('water-fill');
+            if (waterFillEl) waterFillEl.style.height = `${percent}%`;
+        }
+
+        function updateMoodUI(moodHistory) {
+            // Highlight of the last logged score:
+            const lastEntry = moodHistory.length > 0 ? moodHistory[moodHistory.length - 1] : null;
+
+            document.querySelectorAll('.mood-btn').forEach(btn => { btn.classList.remove('selected'); });
+            
+            const messageEl = document.getElementById('mood-log-message');
+            
+            if (messageEl) {
+                if (lastEntry) {
+                    const score = lastEntry.mood_score;
+                    const button = document.querySelector(`.mood-btn[data-score="${score}"]`);
+                    if (button) { button.classList.add('selected'); }
+                    const timeStr = new Date(lastEntry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    messageEl.textContent = `Last mood logged (${timeStr}): Score ${score}/10`;
+                    messageEl.className = 'text-center mt-3 text-sm text-green-600';
+                } else {
+                    messageEl.textContent = 'Click an emoji to log your mood.';
+                    messageEl.className = 'text-center mt-3 text-sm text-gray-700';
+                }
+            }
+        }
+        
+        async function fetchMoodSuggestion() {
+            const suggestionEl = getEl('ai-suggestion-text');
+            suggestionEl.textContent = 'Analyzing mood trends...';
+            
+            const moodHistory = dashboardData.wellness?.mood_history || [];
+
+            if (moodHistory.length < 3) {
+                 suggestionEl.textContent = 'Need more mood data (at least 3 entries) for personalized AI suggestions.';
+                 return;
+            }
+            
+            const formattedHistory = moodHistory
+                .map(m => `(Score: ${m.mood_score}/10, Time: ${new Date(m.timestamp).toLocaleString()})`)
+                .join('; ');
+
+            const systemPrompt = `You are a positive and insightful wellness coach. Analyze the user's recent mood history and provide a single, actionable, and encouraging suggestion related to study, relaxation, or self-care. Do not explain the history, just give the suggestion.`;
+            
+            const userQuery = `Based on this recent mood data: ${formattedHistory}, provide a wellness tip.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            try {
+                const response = await fetchWithExponentialBackoff(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API returned status ${response.status}`);
+                
+                const result = await response.json();
+                const suggestionText = result.candidates?.[0]?.content?.parts?.[0]?.text || 'Could not generate suggestion.';
+                
+                suggestionEl.textContent = suggestionText;
+            } catch (error) {
+                 console.error('AI Suggestion Error:', error);
+                 suggestionEl.textContent = 'Error fetching AI suggestion. Please check your network or try again later.';
+            }
+        }
+
+
+        function renderCourseSummaries(courses) {
+            const listEl = document.getElementById('course-list-summary');
+            if (!listEl) return;
+            
+            listEl.innerHTML = '';
+            
+            if (courses.length === 0) {
+                listEl.innerHTML = '<li class="text-gray-600">No courses added yet.</li>';
+                return;
+            }
+
+            courses.forEach(course => { 
+                const li = document.createElement('li');
+                li.className = 'flex justify-between p-2 bg-gray-200 rounded-md';
+                const scoreColor = course.score >= 90 ? 'text-green-600' : (course.score >= 80 ? 'text-blue-600' : 'text-yellow-600');
+                li.innerHTML = `
+                    <span class="font-bold text-gray-900">${course.title} (${course.credits} cr)</span> 
+                    <span class="${scoreColor} font-extrabold">${course.score}%</span>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+        
+        function renderUpcomingTests(tests) {
+            const listEl = getEl('upcoming-tests-list');
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+            
+            if (tests.length === 0) {
+                listEl.innerHTML = '<li class="text-gray-600">No upcoming deadlines found.</li>';
+                return;
+            }
+
+            tests.forEach(test => {
+                const dt = new Date(test.due_date);
+                const dateStr = dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                const timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                const li = document.createElement('li');
+                li.className = 'border-l-4 border-red-500 pl-3 bg-gray-200 p-2 rounded-md';
+                li.innerHTML = `
+                    <div class="flex justify-between items-center text-gray-900">
+                        <span class="font-bold text-red-600">${test.course_title}: ${test.type}</span>
+                        <span class="text-sm text-gray-700">${dateStr} ${timeStr}</span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">${test.details || 'No details provided.'}</p>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+        
+        function renderTimetable(timetable) {
+            const container = getEl('timetable-display');
+            if (!container) return;
+            
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const timetableData = {};
+            
+            days.forEach(day => timetableData[day] = []);
+            timetable.forEach(entry => timetableData[entry.day_of_week].push(entry));
+
+            let tableHtml = `<table class="min-w-full divide-y divide-gray-300 text-gray-900">
+                <thead><tr class="bg-gray-100">`;
+            days.forEach(day => {
+                tableHtml += `<th class="p-3 text-left text-xs font-medium text-gray-700 uppercase">${day.substring(0, 3)}</th>`;
+            });
+            tableHtml += `</tr></thead><tbody><tr>`;
+
+            days.forEach(day => {
+                const entries = timetableData[day];
+                tableHtml += `<td class="p-3 align-top border-r border-gray-300">`;
+                
+                if (entries.length > 0) {
+                    entries.forEach(entry => {
+                        tableHtml += `
+                            <div class="p-2 mb-1 rounded-md border-l-4 border-pink-500" style="background-color: rgb(var(--primary), 0.1);">
+                                <p class="font-semibold text-gray-900 text-sm">${entry.course_title}</p>
+                                <p class="text-xs text-pink-600">${entry.start_time} - ${entry.end_time}</p>
+                                <p class="text-xs text-gray-600">${entry.location || 'N/A'}</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    tableHtml += `<p class="text-xs text-gray-400">Free</p>`;
+                }
+                tableHtml += `</td>`;
+            });
+
+            tableHtml += `</tr></tbody></table>`;
+
+            container.innerHTML = tableHtml;
+        }
+
+        function updateAppointmentUI(appointments) {
+            const listEl = document.getElementById('appointment-list');
+            if (!listEl) return;
+            
+            listEl.innerHTML = '';
+
+            if (appointments.length === 0) {
+                listEl.innerHTML = '<li class="text-gray-600">No upcoming appointments scheduled.</li>';
+                return;
+            }
+            
+            appointments.forEach(app => {
+                const dt = new Date(app.date_time);
+                const dateStr = dt.toLocaleDateString();
+                const timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                const li = document.createElement('li');
+                li.className = 'border-l-4 border-blue-500 pl-3 bg-gray-200 p-2 rounded-md text-gray-900';
+                li.innerHTML = `
+                    <span class="font-bold text-blue-600">${app.type}</span>: ${dateStr} at ${timeStr}
+                    <p class="text-xs text-gray-600">${app.details}</p>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+        
+        function updateFinancialSummary(financeData) {
+            const categories = ['income', 'rent', 'food', 'utilities', 'transport', 'other'];
+            let incomeTotal = 0;
+            let expenseTotal = 0;
+            
+            const amounts = financeData.reduce((acc, item) => {
+                acc[item.category] = item.amount;
+                return acc;
+            }, {});
+
+            incomeTotal = amounts['income'] || 0;
+            
+            expenseTotal = categories.filter(c => c !== 'income').reduce((sum, category) => sum + (amounts[category] || 0), 0);
+            
+            const netBalance = incomeTotal - expenseTotal;
+            
+            if (getEl('income-total')) getEl('income-total').textContent = `$${incomeTotal.toFixed(2)}`;
+            if (getEl('expense-total')) getEl('expense-total').textContent = `$${expenseTotal.toFixed(2)}`;
+            
+            const netEl = getEl('net-balance');
+            if (netEl) {
+                netEl.textContent = `$${netBalance.toFixed(2)}`;
+                netEl.className = `font-extrabold text-3xl ${netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            }
+            
+            const monthDisplay = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+            if (getEl('current-month-display')) getEl('current-month-display').textContent = monthDisplay;
+            
+            document.querySelectorAll('.financial-input').forEach(input => {
+                const category = input.dataset.category;
+                input.value = amounts[category] !== undefined ? amounts[category].toFixed(2) : '0.00';
+            });
+
+            initializeBudgetChart(amounts); 
+        }
+        
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('unread-notifications');
+            const navBadge = document.getElementById('unread-notifications-nav');
+            const menuBadge = document.getElementById('unread-notifications-menu');
+            if (badge) badge.textContent = count;
+            if (navBadge) navBadge.textContent = count;
+            if (menuBadge) menuBadge.textContent = count;
+            if (navBadge) navBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+            if (menuBadge) menuBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+        
+        // --- INTERACTIVE FEATURES & API CALLS ---
+        
+        // FIX: Updated addWater to use POST response data for immediate UI update AND update local dashboardData cache.
+        async function addWater(amount_ml) {
+            try {
+                const response = await fetch(`${API_BASE}/api/hydration`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount_ml })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage('message-box', `💧 Added ${amount_ml}ml of water! Total today: ${data.total_today}ml`, false);
+                    
+                    // FIX: Update the local dashboardData cache for the AI/other features
+                    dashboardData.wellness = dashboardData.wellness || {};
+                    dashboardData.wellness.hydration_ml = data.total_today; 
+                    
+                    // Use returned total_today data to update UI directly
+                    updateHydrationUI(data.total_today, 2000); 
+                } else {
+                    showMessage('message-box', 'Failed to log water.', true);
+                }
+            } catch (error) {
+                showMessage('message-box', 'Network error while logging water.', true);
+            }
+        }
+
+        async function fetchTimetable() {
+            const listEl = getEl('student-timetable-list');
+            if (!listEl) return;
+            
+            listEl.innerHTML = '<p class="text-gray-600">Loading schedule...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/timetable`);
+                if (!response.ok) throw new Error('Failed to fetch timetable');
+                const entries = await response.json();
+                
+                listEl.innerHTML = '';
+                if (entries.length === 0) {
+                     listEl.innerHTML = '<p class="text-gray-600">No classes added yet. Use the form above!</p>';
+                     return;
+                }
+
+                entries.forEach(entry => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center p-3 bg-gray-200 rounded-lg shadow-sm';
+                    div.innerHTML = `
+                        <div class="text-gray-900">
+                            <span class="font-bold text-purple-600">${entry.course_title}</span> 
+                            <span class="ml-4 text-sm text-gray-700">(${entry.day_of_week}, ${entry.start_time} - ${entry.end_time})</span>
+                        </div>
+                        <div class="space-x-2 mt-2 md:mt-0">
+                            <button onclick="deleteTimetableEntry(${entry.id})" class="text-red-600 hover:text-red-700 text-sm p-1 rounded bg-red-100">Delete</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Timetable Fetch Error:', error);
+                listEl.innerHTML = '<p class="text-red-600">Error loading schedule data.</p>';
+            }
+        }
+        
+        async function handleAddTimetable(event) {
+            event.preventDefault();
+            const form = event.target;
+            const title = form['tt-course-title-student'].value;
+            const day = form['tt-day-student'].value;
+            const start = form['tt-start-student'].value;
+            const end = form['tt-end-student'].value;
+            const location = form['tt-location-student'].value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/timetable`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        course_title: title, 
+                        day_of_week: day, 
+                        start_time: start, 
+                        end_time: end, 
+                        location: location 
+                    })
+                });
+                
+                if (response.ok) {
+                    showMessage('message-box', '⏰ Class added to schedule!', false);
+                    form.reset();
+                    fetchTimetable();
+                    fetchDashboardData();
+                } else {
+                    const data = await response.json();
+                    showMessage('timetable-message', data.message || 'Failed to add class.', true);
+                }
+            } catch (error) {
+                showMessage('timetable-message', 'Network error while adding class.', true);
+            }
+        }
+        
+        async function deleteTimetableEntry(entryId) {
+             if (!confirm(`Are you sure you want to delete this class from your schedule?`)) return;
+             try {
+               const response = await fetch(`${API_BASE}/api/timetable`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: entryId })
+                });
+                if (response.ok) {
+                    showMessage('message-box', '🗑️ Class deleted.', false);
+                    fetchTimetable();
+                    fetchDashboardData();
+                } else {
+                    showMessage('message-box', 'Failed to delete class.', true);
+                }
+             } catch (error) {
+                showMessage('message-box', 'Network error during deletion.', true);
+             }
+        }
+
+        async function fetchFinancialData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/finance`);
+                if (!response.ok) throw new Error('Failed to fetch financial data');
+                const financeData = await response.json();
+                updateFinancialSummary(financeData);
+            } catch (error) {
+                 showMessage('message-box', `Error fetching budget: ${error.message}`, true);
+                 updateFinancialSummary([]);
+            }
+        }
+        
+        async function handleFinancialUpdate(event) {
+            event.preventDefault();
+            const formMessageEl = getEl('financial-message');
+            if (formMessageEl) formMessageEl.textContent = 'Saving budget...';
+            
+            const entries = [];
+            document.querySelectorAll('.financial-input').forEach(input => {
+                entries.push({
+                    category: input.dataset.category,
+                    amount: parseFloat(input.value) || 0 
+                });
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/api/finance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entries })
+                });
+                
+                if (response.ok) {
+                    showMessage('message-box', '💰 Monthly budget saved successfully!', false);
+                    if (formMessageEl) formMessageEl.textContent = '';
+                    closeModal('financialModal');
+                    fetchDashboardData();
+                } else {
+                    const data = await response.json();
+                    showMessage('message-box', data.message || 'Failed to save budget.', true);
+                    if (formMessageEl) formMessageEl.textContent = data.message || 'Failed to save budget.';
+                }
+            } catch (error) {
+                showMessage('message-box', 'Network error while saving budget.', true);
+                if (formMessageEl) formMessageEl.textContent = 'Network error.';
+            }
+        }
+
+        async function fetchCourses() {
+            try {
+                const response = await fetch(`${API_BASE}/api/courses`);
+                if (!response.ok) { throw new Error('Failed to fetch courses'); }
+                const courses = await response.json();
+                
+                const listEl = document.getElementById('course-management-list');
+                if (!listEl) return;
+                
+                listEl.innerHTML = '';
+                
+                if (courses.length === 0) {
+                     listEl.innerHTML = '<p class="text-gray-600">No courses tracked yet. Add one below!</p>';
+                     return;
+                }
+
+                courses.forEach(course => {
+                    const div = document.createElement('div');
+                    div.className = 'flex flex-col md:flex-row justify-between items-center p-3 bg-gray-200 rounded-lg shadow-sm';
+                    div.innerHTML = `
+                        <div class="text-gray-900">
+                            <span class="font-bold text-pink-600">${course.title}</span> 
+                            <span class="ml-4 text-sm text-gray-700">Score: ${course.score}%</span>
+                            <span class="ml-4 text-sm text-gray-700">Credits: ${course.credits}</span>
+                        </div>
+                        <div class="space-x-2 mt-2 md:mt-0">
+                            <button onclick="deleteCourse(${course.id})" class="text-red-600 hover:text-red-700 text-sm p-1 rounded bg-red-100">Delete</button>
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Course Fetch Error:', error);
+                showMessage('message-box', 'Error loading course data.', true);
+            }
+        }
+
+        async function handleAddCourse(event) {
+            event.preventDefault();
+            const title = document.getElementById('new-course-title').value;
+            const score = parseInt(document.getElementById('new-course-score').value);
+            const credits = parseFloat(document.getElementById('new-course-credits').value);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/courses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, score, credits })
+                });
+                
+                if (response.ok) {
+                    showMessage('message-box', '📝 Course added successfully!', false);
+                    document.getElementById('addCourseForm').reset();
+                    fetchCourses();
+                    fetchDashboardData();
+                } else {
+                    const data = await response.json();
+                    showMessage('message-box', data.message || 'Failed to add course.', true);
+                }
+            } catch (error) {
+                showMessage('message-box', 'Network error while adding course.', true);
+            }
+        }
+        
+        async function deleteCourse(courseId) {
+             if (!confirm(`Are you sure you want to delete this course?`)) return;
+             try {
+               const response = await fetch(`${API_BASE}/api/courses`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: courseId })
+                });
+                if (response.ok) {
+                    showMessage('message-box', '🗑️ Course deleted.', false);
+                    fetchCourses();
+                    fetchDashboardData();
+                } else {
+                    showMessage('message-box', 'Failed to delete course.', true);
+                }
+             } catch (error) {
+                showMessage('message-box', 'Network error during deletion.', true);
+             }
+        }
+
+        async function logMood(score) {
+            try {
+                const response = await fetch(`${API_BASE}/api/mood`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mood_score: score })
+                });
+
+                if (response.ok) {
+                    showMessage('message-box', `❤️ Mood logged as ${score}/10!`, false);
+                    // Force the mood history and chart update
+                    fetchDashboardData();
+                    // Also fetch a new suggestion
+                    fetchMoodSuggestion(); 
+                } else {
+                    showMessage('message-box', 'Failed to log mood.', true);
+                }
+            } catch (error) {
+                showMessage('message-box', 'Network error while logging mood.', true);
+            }
+        }
+
+
+        async function handleAppointmentBooking(event) {
+            event.preventDefault();
+            const form = event.target;
+            const appType = form['app-type'].value;
+            const date = form['app-date'].value;
+            const time = form['app-time'].value;
+            const details = form['app-details'].value;
+            const messageEl = getEl('appointment-message');
+
+            const selectedDateTime = new Date(`${date}T${time}:00`);
+            const now = new Date();
+
+            // FIX: Prevent booking in the past (client-side validation)
+            if (selectedDateTime <= now) {
+                 showMessage('appointment-message', 'Cannot book an appointment for a past date or time.', true);
+                 return;
+            }
+            
+            messageEl.textContent = 'Booking appointment...';
+            messageEl.className = 'text-center mt-3 text-sm text-gray-600';
+
+
+            try {
+                const response = await fetch(`${API_BASE}/api/appointments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: appType, date, time, details })
+                });
+
+                if (response.ok) {
+                    showMessage('message-box', '📅 Appointment booked successfully!', false);
+                    closeModal('appointmentModal');
+                    form.reset();
+                    fetchDashboardData();
+                } else {
+                    const data = await response.json();
+                    showMessage('appointment-message', data.message || 'Failed to book appointment.', true);
+                }
+            } catch (error) {
+                showMessage('appointment-message', 'Network error while booking appointment.', true);
+            }
+        }
+        
+        async function fetchNotifications() {
+            const listEl = getEl('notification-list');
+            if (!listEl) return;
+            
+            listEl.innerHTML = '<p class="text-gray-600 text-center">Loading notifications...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications`);
+                if (!response.ok) throw new Error('Failed to fetch notifications');
+                
+                const notifications = await response.json();
+                listEl.innerHTML = '';
+
+                if (notifications.length === 0) {
+                    listEl.innerHTML = '<p class="text-gray-600 text-center">You have no recent notifications.</p>';
+                    return;
+                }
+
+                notifications.forEach(notif => {
+                    const timeStr = new Date(notif.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+                    const div = document.createElement('div');
+                    const bgColor = notif.is_read ? 'bg-gray-200' : 'bg-gray-100 border-violet-500';
+                    const borderColor = notif.is_read ? 'border-gray-400' : 'border-violet-500';
+
+                    div.className = `p-3 rounded-lg border-l-4 ${bgColor} ${borderColor} text-gray-900`;
+                    div.innerHTML = `
+                        <p class="font-medium ${notif.is_read ? 'text-gray-700' : 'text-gray-900'}">${notif.message}</p>
+                        <span class="text-xs text-gray-600">${timeStr}</span>
+                    `;
+                    listEl.appendChild(div);
+                });
+            } catch (error) {
+                listEl.innerHTML = '<p class="text-red-600 text-center">Error loading notifications.</p>';
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'mark_read' })
+                });
+
+                if (response.ok) {
+                    showMessage('message-box', '🔔 All notifications marked as read.', false);
+                    fetchNotifications();
+                    fetchDashboardData();
+                } else {
+                    showMessage('message-box', 'Failed to mark notifications as read.', true);
+                }
+            } catch (error) {
+                showMessage('message-box', 'Network error while marking notifications.', true);
+            }
+        }
+        
+        async function fetchAdminUsers() {
+             const listEl = getEl('admin-user-list');
+             if (!listEl) return;
+             
+             listEl.innerHTML = '<tr><td colspan="5" class="p-3 text-center">Loading users...</td></tr>';
+             try {
+                 const response = await fetch(`${API_BASE}/api/admin/users`);
+                 const users = await response.json();
+                 listEl.innerHTML = '';
+                 users.forEach(user => {
+                     const tr = document.createElement('tr');
+                     tr.className = 'hover:bg-gray-100';
+                     tr.innerHTML = `
+                         <td class="px-3 py-2 whitespace-nowrap text-gray-600">${user.id}</td>
+                         <td class="px-3 py-2 font-medium text-pink-600">${user.username}</td>
+                         <td class="px-3 py-2">${user.gpa.toFixed(2)}</td>
+                         <td class="px-3 py-2">${user.is_admin ? '✅' : '❌'}</td>
+                         <td class="px-3 py-2 space-x-2">
+                             <button onclick="deleteUser(${user.id})" class="text-red-600 hover:text-red-700 text-xs">Delete</button>
+                             <button onclick="promptUpdateUser(${user.id}, ${user.gpa}, ${user.is_admin})" class="text-yellow-600 hover:text-yellow-700 text-xs">Edit</button>
+                         </td>
+                     `;
+                     listEl.appendChild(tr);
+                 });
+             } catch (error) {
+                 listEl.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-red-600">Error loading users.</td></tr>';
+             }
+        }
+
+        function promptUpdateUser(userId, currentGpa, currentAdminStatus) {
+            const newGpa = prompt(`Enter new GPA for user ID ${userId}: (Current: ${currentGpa})`, currentGpa.toFixed(2));
+            if (newGpa === null) return;
+            const newAdminStatus = confirm(`Set user ID ${userId} as Admin? (Current: ${currentAdminStatus ? 'Yes' : 'No'})`);
+            updateUser(userId, parseFloat(newGpa), newAdminStatus);
+        }
+
+        async function updateUser(userId, newGpa, newAdminStatus) {
+             try {
+                 const response = await fetch(`${API_BASE}/api/admin/user/${userId}`, { 
+                     method: 'PUT',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ gpa: newGpa, is_admin: newAdminStatus })
+                 });
+                 if (response.ok) {
+                     showMessage('message-box', `User ${userId} updated.`, false);
+                     fetchAdminUsers();
+                 } else {
+                     showMessage('message-box', 'Failed to update user.', true);
+                 }
+             } catch (error) {
+                 showMessage('message-box', 'Network error during update.', true);
+             }
+        }
+        
+        async function deleteUser(userId) {
+             if (!confirm(`Are you sure you want to delete user ID ${userId}?`)) return;
+             try {
+                 const response = await fetch(`${API_BASE}/api/admin/user/${userId}`, { method: 'DELETE' });
+                 if (response.ok) {
+                     showMessage('message-box', `User ${userId} deleted.`, false);
+                     fetchAdminUsers();
+                 } else {
+                     showMessage('message-box', 'Failed to delete user.', true);
+                 }
+             } catch (error) {
+                 showMessage('message-box', 'Network error during deletion.', true);
+             }
+        }
+        
+        async function fetchAdminTimetable() {
+            const container = getEl('admin-timetable-table-container');
+            if (!container) return;
+
+            container.innerHTML = '<p class="text-gray-600 text-center py-4">Loading timetable data...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/timetable`);
+                const entries = await response.json();
+                
+                const tableHtml = `<table class="w-full text-sm text-left text-gray-900">
+                    <thead><tr class="bg-gray-100"><th class="p-3">ID</th><th class="p-3">Student</th><th class="p-3">Day</th><th class="p-3">Time</th><th class="p-3">Course</th><th class="p-3">Actions</th></tr></thead><tbody>
+                    ${entries.map(e => `
+                        <tr data-id="${e.id}" class="border-b border-gray-300 hover:bg-gray-100">
+                            <td class="p-3 text-gray-600">${e.id}</td>
+                            <td class="p-3 font-semibold text-blue-600">${e.username} (${e.user_id})</td>
+                            <td class="p-3">${e.day_of_week}</td>
+                            <td class="p-3 text-pink-600">${e.start_time} - ${e.end_time}</td>
+                            <td class="p-3">${e.course_title} (${e.location || 'N/A'})</td>
+                            <td class="p-3"><button class="bg-red-600 hover:bg-red-700 text-white text-xs p-1 rounded" onclick="adminDeleteTimetable(${e.id})">Delete</button></td>
+                        </tr>
+                    `).join('')}
+                    </tbody></table>`;
+                container.innerHTML = tableHtml;
+
+            } catch (error) { container.innerHTML = `<p class="text-red-600 text-center py-4">Failed to load timetable: ${error.message}</p>`; }
+        }
+
+        async function adminDeleteTimetable(id) {
+             if (!confirm(`Are you sure you want to delete timetable entry ID ${id}?`)) return;
+             try {
+                const response = await fetch(`${API_BASE}/api/admin/timetable`, { 
+                    method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+                });
+                if (response.ok) { fetchAdminTimetable(); fetchDashboardData(); showMessage('message-box', 'Timetable entry deleted.', false); } 
+                else { showMessage('message-box', 'Failed to delete entry.', true); }
+             } catch (error) { showMessage('message-box', 'Network error during deletion.', true); }
+        }
+
+        async function adminAddTimetable(event) {
+             event.preventDefault();
+             const form = event.target;
+             const formMsgEl = getEl('admin-tt-message');
+             if (formMsgEl) formMsgEl.textContent = 'Adding entry...';
+             
+             const payload = {
+                 user_id: parseInt(form['tt-user-id'].value),
+                 course_title: form['tt-course-title'].value,
+                 day_of_week: form['tt-day'].value,
+                 start_time: form['tt-start'].value,
+                 end_time: form['tt-end'].value,
+                 location: form['tt-location'].value,
+             };
+
+             if (isNaN(payload.user_id) || payload.user_id <= 0) { showMessage('admin-tt-message', 'Invalid User ID.', true); return; }
+
+             try {
+                 const response = await fetch(`${API_BASE}/api/admin/timetable`, {
+                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                 });
+                 if (response.ok) { form.reset(); fetchAdminTimetable(); fetchDashboardData(); showMessage('message-box', 'Timetable entry added!', false); if (formMsgEl) formMsgEl.textContent = ''; } 
+                 else { showMessage('admin-tt-message', 'Failed to add entry.', true); }
+             } catch (error) { showMessage('admin-tt-message', 'Network error.', true); }
+        }
+        
+        async function fetchAdminTests() {
+            const container = getEl('admin-tests-table-container');
+            if (!container) return;
+
+            container.innerHTML = '<p class="text-gray-600 text-center py-4">Loading tests data...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/tests`);
+                const tests = await response.json();
+                
+                const tableHtml = `<table class="w-full text-sm text-left text-gray-900">
+                    <thead><tr class="bg-gray-100"><th class="p-3">ID</th><th class="p-3">Student</th><th class="p-3">Course</th><th class="p-3">Type</th><th class="p-3">Due Date</th><th class="p-3">Actions</th></tr></thead><tbody>
+                    ${tests.map(t => {
+                        const dt = new Date(t.due_date);
+                        return `
+                            <tr data-id="${t.id}" class="border-b border-gray-300 hover:bg-gray-100">
+                                <td class="p-3 text-gray-600">${t.id}</td>
+                                <td class="p-3 font-semibold text-blue-600">${t.username} (${t.user_id})</td>
+                                <td class="p-3">${t.course_title}</td>
+                                <td class="p-3 text-red-600">${t.type}</td>
+                                <td class="p-3 text-gray-900">${dt.toLocaleString()}</td>
+                                <td class="p-3"><button class="bg-red-600 hover:bg-red-700 text-white text-xs p-1 rounded" onclick="adminDeleteTest(${t.id})">Delete</button></td>
+                            </tr>
+                        `;
+                    }).join('')}
+                    </tbody></table>`;
+                container.innerHTML = tableHtml;
+
+            } catch (error) { container.innerHTML = `<p class="text-red-600 text-center py-4">Failed to load tests: ${error.message}</p>`; }
+        }
+
+        async function adminAddTest(event) {
+             event.preventDefault();
+             const form = event.target;
+             const formMsgEl = getEl('admin-test-message');
+             if (formMsgEl) formMsgEl.textContent = 'Adding test...';
+             
+             const payload = {
+                 user_id: parseInt(form['test-user-id'].value),
+                 course_title: form['test-course-title'].value,
+                 type: form['test-type'].value,
+                 due_date: form['test-due-date'].value,
+                 details: form['test-details'].value,
+             };
+
+             if (isNaN(payload.user_id) || payload.user_id <= 0) { showMessage('admin-test-message', 'Invalid User ID.', true); return; }
+
+             try {
+                 const response = await fetch(`${API_BASE}/api/admin/tests`, {
+                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                 });
+                 if (response.ok) { form.reset(); fetchAdminTests(); fetchDashboardData(); showMessage('message-box', 'Test added!', false); if (formMsgEl) formMsgEl.textContent = ''; } 
+                 else { showMessage('admin-test-message', 'Failed to add test.', true); }
+             } catch (error) { showMessage('admin-test-message', 'Network error.', true); }
+        }
+
+        async function adminDeleteTest(id) {
+             if (!confirm(`Are you sure you want to delete test entry ID ${id}?`)) return;
+             try {
+                const response = await fetch(`${API_BASE}/api/admin/tests`, { 
+                    method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+                });
+                if (response.ok) { fetchAdminTests(); fetchDashboardData(); showMessage('message-box', 'Test deleted.', false); } 
+                else { showMessage('message-box', 'Failed to delete test.', true); }
+             } catch (error) { showMessage('message-box', 'Network error during deletion.', true); }
+        }
+
+        // --- CHART INITIALIZATION (FIXED to prevent reuse error) ---
+
+        function initializeBudgetChart(amounts) {
+            const expenseData = [
+                { label: 'Rent/Housing', amount: amounts['rent'] || 0, color: 'rgba(52, 211, 163, 0.8)' }, // Green
+                { label: 'Food/Groceries', amount: amounts['food'] || 0, color: 'rgba(168, 85, 247, 0.8)' }, // Purple
+                { label: 'Utilities', amount: amounts['utilities'] || 0, color: 'rgba(251, 191, 36, 0.8)' }, // Yellow
+                { label: 'Transport', amount: amounts['transport'] || 0, color: 'rgba(244, 63, 94, 0.8)' }, // Pink
+                { label: 'Other/Savings', amount: amounts['other'] || 0, color: 'rgba(96, 165, 250, 0.8)' } // Blue
+            ].filter(item => item.amount > 0);
+            
+            if (budgetChartInstance) { budgetChartInstance.destroy(); }
+            
+            const budgetCtx = getEl('budgetPieChart')?.getContext('2d');
+            if (!budgetCtx) return;
+            
+            if (expenseData.length === 0) {
+                 budgetCtx.clearRect(0, 0, getEl('budgetPieChart').width, getEl('budgetPieChart').height);
+                 return;
+            }
+            
+            budgetChartInstance = new Chart(budgetCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: expenseData.map(d => d.label),
+                    datasets: [{
+                        data: expenseData.map(d => d.amount),
+                        backgroundColor: expenseData.map(d => d.color),
+                        hoverOffset: 4,
+                        borderColor: 'rgb(var(--dark-card))',
+                        borderWidth: 2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: 'rgb(var(--text-color))' }, position: 'bottom' }, title: { display: false } } }
+            });
+        }
+
+        function initializeCharts(courses, moodHistory, financeData) {
+            const textColor = 'rgb(var(--text-color))';
+            const gridColor = 'rgba(0, 0, 0, 0.1)';
+
+            const chartOptions = { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { labels: { color: textColor } } }, 
+                scales: { 
+                    y: { beginAtZero: true, max: 100, ticks: { color: textColor }, grid: { color: gridColor } }, 
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } } 
+                } 
+            };
+
+            const createChart = (ctx, type, data, options, instance) => { 
+                if (instance && typeof instance.destroy === 'function') {
+                    instance.destroy(); // FIX: Destroy existing chart instance
+                } 
+                return new Chart(ctx, { type, data, options }); 
+            };
+            
+            // 1. Academic Performance Chart
+            const perfCtx = getEl('performanceChart')?.getContext('2d');
+            if (perfCtx) {
+                performanceChartInstance = createChart(perfCtx, 'bar', {
+                    labels: courses.map(c => c.title), datasets: [{ label: 'Course Score (%)', data: courses.map(c => c.score), backgroundColor: 'rgba(244, 63, 94, 0.8)', borderColor: 'rgb(var(--primary))', borderWidth: 1 }]
+                }, {...chartOptions, scales: {...chartOptions.scales, y: {...chartOptions.scales.y, max: 100}}}, performanceChartInstance);
+            }
+
+            // 2. Mood Trend Chart (Dashboard/Wellness Chart)
+            const moodCtx = getEl('moodChart')?.getContext('2d');
+            const wellnessMoodCtx = getEl('wellnessMoodChart')?.getContext('2d');
+            
+            // Prepare data by grouping by date for a clearer daily trend view on the chart
+            // For charting, average scores per day to smooth out multiple clicks:
+            const dailyAverages = moodHistory.reduce((acc, entry) => {
+                const dateKey = entry.entry_date; // Use the Date object string (Y-M-D)
+                if (!acc[dateKey]) {
+                    acc[dateKey] = { totalScore: 0, count: 0, formattedDate: new Date(dateKey).toLocaleDateString([], { month: 'short', day: 'numeric' }) };
+                }
+                acc[dateKey].totalScore += entry.mood_score;
+                acc[dateKey].count += 1;
+                return acc;
+            }, {});
+            
+            const chartLabels = Object.values(dailyAverages).map(d => d.formattedDate);
+            const chartDataPoints = Object.values(dailyAverages).map(d => Math.round(d.totalScore / d.count));
+
+
+            const moodChartData = {
+                labels: chartLabels,
+                datasets: [{ label: 'Average Daily Mood (1-10)', data: chartDataPoints, borderColor: 'rgb(var(--accent))', backgroundColor: 'rgba(168, 85, 247, 0.2)', tension: 0.4, fill: true }]
+            };
+            const moodChartOptions = {...chartOptions, scales: {...chartOptions.scales, y: {...chartOptions.scales.y, max: 10, stepSize: 1}}};
+
+            if (moodCtx) {
+                moodChartInstance = createChart(moodCtx, 'line', moodChartData, moodChartOptions, moodChartInstance);
+            }
+            
+            if (wellnessMoodCtx) {
+                wellnessMoodChartInstance = createChart(wellnessMoodCtx, 'line', moodChartData, moodChartOptions, wellnessMoodChartInstance); 
+            }
+
+            // 3. Financial Chart
+            if (financeData) {
+                 updateFinancialSummary(financeData);
+            }
+        }
+        
+        // --- CHATBOT LOGIC (UPDATED for Structured Commands) ---
+        
+        const COMMAND_SCHEMA = {
+             type: "OBJECT",
+             properties: {
+                 "command": {
+                     "type": "STRING",
+                     "description": "The command to execute, only 'add_water' is currently supported."
+                 },
+                 "amount": {
+                     "type": "NUMBER",
+                     "description": "The amount in milliliters (ml) to add. Must be an integer."
+                 }
+             },
+             required: ["command", "amount"]
+        };
+        
+        async function handleAiCommand(command, amount) {
+            if (command === 'add_water' && typeof amount === 'number' && amount > 0) {
+                // Execute the successful backend call
+                await addWater(parseInt(amount));
+                return { handled: true, message: `Successfully logged ${amount}ml of water to your wellness tracker.` };
+            }
+            return { handled: false };
+        }
+
+        async function attemptStructuredCommand(userPrompt) {
+             // 1. Check for command keyword presence
+             if (!/add.*?water|log.*?water/i.test(userPrompt)) {
+                 return { isCommand: false, command: null };
+             }
+             
+             // 2. Prepare payload for structured response command
+             const commandPrompt = `User is requesting a system command. Analyze this request and provide a structured JSON response. If the request cannot be parsed into the supported command 'add_water' with a numerical 'amount' in milliliters, return an empty object {} or a conversational text-only response.
+
+             [USER QUERY]
+             ${userPrompt}
+             
+             [SYSTEM INSTRUCTION]
+             Strictly output ONLY a JSON object conforming to the provided schema to execute the command. If the command cannot be parsed, output a conversational text response instead. Do not add any extra text or markdown, just the JSON object.`;
+
+
+             const payload = {
+                 contents: [{ parts: [{ text: commandPrompt }] }],
+                 generationConfig: {
+                     responseMimeType: "application/json",
+                     responseSchema: COMMAND_SCHEMA
+                 },
+                 systemInstruction: {
+                     parts: [{ text: "You are a tool that analyzes user intent for system commands. Output structured JSON." }]
+                 }
+             };
+
+             try {
+                 const response = await fetchWithExponentialBackoff(GEMINI_API_URL, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(payload)
+                 });
+                 
+                 if (!response.ok) throw new Error(`API returned status ${response.status}`);
+                 
+                 const result = await response.json();
+                 const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                 
+                 if (jsonText) {
+                     const commandObj = JSON.parse(jsonText);
+                     if (commandObj.command) {
+                        return { isCommand: true, command: commandObj };
+                     }
+                 }
+                 return { isCommand: false, command: null };
+             } catch (error) {
+                 console.error("Structured command attempt failed:", error);
+                 return { isCommand: false, command: null };
+             }
+        }
+
+        async function handleChatSubmit(event) {
+            event.preventDefault();
+            const inputEl = getEl('chat-input');
+            const statusEl = getEl('chat-status');
+            const userPrompt = inputEl.value;
+
+            if (!userPrompt) return;
+
+            appendMessage('user', userPrompt);
+            inputEl.value = '';
+            statusEl.textContent = 'AI is thinking...';
+
+            let botResponse = null;
+            let sources = [];
+            
+            // 1. Try to process as a structured command (like "add water")
+            const commandResult = await attemptStructuredCommand(userPrompt);
+
+            if (commandResult.isCommand) {
+                const { command, amount } = commandResult.command;
+                const commandExecution = await handleAiCommand(command, amount);
+                
+                if (commandExecution.handled) {
+                     botResponse = `Command executed: ${commandExecution.message}`;
+                } else {
+                     botResponse = "Sorry, I detected a command, but encountered an error trying to execute it.";
+                }
+            } 
+            
+            // 2. If not a command, fall back to general chat and context analysis
+            if (!botResponse) {
+                const context = getContextualPrompt();
+                const fullPrompt = `You are UNISPHERE, an academic and wellness assistant. Provide helpful, conversational advice based on the provided user data summary and the user's latest query. If the user's query is purely general (like "tell me a joke"), ignore the user data summary.
+
+                [USER DATA SUMMARY]
+                ${context}
+                
+                [USER QUERY]
+                ${userPrompt}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: fullPrompt }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: {
+                        parts: [{ text: "You are a friendly, helpful, and concise student success bot." }]
+                    }
+                };
+                
+                try {
+                    const response = await fetchWithExponentialBackoff(GEMINI_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`API returned status ${response.status}`);
+                    
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate?.content?.parts?.[0]?.text) {
+                        botResponse = candidate.content.parts[0].text;
+                        const groundingMetadata = candidate.groundingMetadata;
+                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                            sources = groundingMetadata.groundingAttributions
+                                .map(attr => ({ uri: attr.web?.uri, title: attr.web?.title }))
+                                .filter(source => source.uri && source.title);
+                        }
+                    } else {
+                        botResponse = "Sorry, I couldn't generate a text response.";
+                    }
+                } catch (error) {
+                    botResponse = `An error occurred: ${error.message}. Please try again later.`;
+                    console.error('Gemini API Error:', error);
+                }
+            }
+
+            // 3. Render the final response
+            if (sources.length > 0) {
+                const sourceHtml = sources.map((s, i) => 
+                    `<a href="${s.uri}" target="_blank" class="text-blue-600 hover:underline text-xs" title="${s.title}">[${i + 1}]</a>`
+                ).join(' ');
+                botResponse += `\n\n(Sources: ${sourceHtml})`;
+            }
+            appendMessage('bot', botResponse);
+            statusEl.textContent = '';
+        }
+        
+        function getContextualPrompt() {
+            // FIX: Safely access properties for context and combine all upcoming events
+            const gpa = dashboardData.user?.gpa?.toFixed(2) ?? 'N/A';
+            const targetGpa = dashboardData.user?.target_gpa?.toFixed(2) ?? '4.00';
+            const courses = dashboardData.courses?.map(c => `${c.title} (${c.score}%, ${c.credits}cr)`).join('; ');
+            const hydration = `${dashboardData.wellness?.hydration_ml ?? 0}ml today`;
+            
+            const allEvents = [
+                ...(dashboardData.upcoming_tests || []).map(t => ({
+                    title: `${t.course_title} ${t.type}`,
+                    date: new Date(t.due_date)
+                })),
+                ...(dashboardData.appointments || []).map(a => ({
+                    title: `${a.type} Appointment`,
+                    date: new Date(a.date_time)
+                }))
+            ].sort((a, b) => a.date - b.date);
+
+            let nextEvent = "None scheduled.";
+            if (allEvents.length > 0) {
+                const next = allEvents[0];
+                nextEvent = `${next.title} on ${next.date.toLocaleDateString()}`;
+            }
+
+            return `User Data Summary: 
+            - Current GPA: ${gpa}
+            - Target GPA: ${targetGpa}
+            - Courses: ${courses || 'None'}
+            - Hydration: ${hydration} (Goal: 2000ml)
+            - Next Deadline/Event: ${nextEvent}`;
+        }
+        
+        async function fetchWithExponentialBackoff(url, options, retries = 5) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) { return response; }
+                } catch (error) {
+                    console.warn(`Attempt ${i + 1} failed with network error:`, error);
+                }
+                const delay = Math.pow(2, i) * 1000 + (Math.random() * 500); 
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            throw new Error('All API attempts failed due to throttling or network error after multiple retries.');
+        }
+
+        function appendMessage(role, text) {
+            const messagesEl = getEl('chat-messages');
+            if (!messagesEl) return;
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${role} ${role === 'user' ? 'text-right' : 'text-left'}`;
+            
+            const bubble = document.createElement('span');
+            const bgColor = role === 'user' ? 'bg-yellow-200 rounded-br-none' : 'bg-purple-100 rounded-bl-none';
+            bubble.className = `p-3 max-w-[80%] rounded-xl inline-block whitespace-pre-wrap ${bgColor}`;
+            
+            if (role === 'user') {
+                 bubble.style.backgroundColor = 'rgb(253 230 138)'; // Light Yellow/Pink
+            } else {
+                 bubble.style.backgroundColor = 'rgb(243 232 255)'; // Light Purple/Pink
+            }
+            
+            bubble.innerHTML = text.replace(/\n/g, '<br>');
+            
+            messageDiv.appendChild(bubble);
+            messagesEl.appendChild(messageDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function openModal(modalId) {
+            const modal = getEl(modalId);
+            if (modal) {
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+            if (modalId === 'courseManagementModal') fetchCourses();
+            if (modalId === 'timetableModal') fetchTimetable(); 
+            if (modalId === 'adminUsersModal') fetchAdminUsers();
+            if (modalId === 'adminTimetableModal') fetchAdminTimetable();
+            if (modalId === 'adminTestsModal') fetchAdminTests();
+            if (modalId === 'notificationsModal') fetchNotifications();
+            if (modalId === 'financialModal') fetchFinancialData();
+            if (modalId === 'studyTimerModal') { resetTimer(); getEl('study-topic-input').value = sessionTopic; }
+            if (modalId === 'profileModal') {
+                getEl('profile-username').textContent = dashboardData.user?.username || 'User';
+                getEl('profile-gpa').textContent = dashboardData.user?.gpa?.toFixed(2) || 'N/A';
+                getEl('profile-admin-status').textContent = dashboardData.user?.is_admin ? 'Admin' : 'Student';
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = getEl(modalId);
+            if (modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // --- STUDY TIMER LOGIC ---
+
+        function formatTime(secs) {
+            const minutes = Math.floor(secs / 60);
+            const seconds = secs % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        function updateTimerDisplay() {
+            getEl('timer-display').textContent = formatTime(totalSeconds);
+            if (totalSeconds <= 300) { // 5 minutes left
+                getEl('timer-display').style.color = 'rgb(var(--danger))';
+            } else {
+                 getEl('timer-display').style.color = 'rgb(var(--accent))';
+            }
+        }
+        
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            
+            sessionTopic = getEl('study-topic-input').value.trim() || 'General Study Session';
+            
+            getEl('timer-start-btn').classList.add('hidden');
+            getEl('timer-pause-btn').classList.remove('hidden');
+            getEl('timer-log-btn').classList.add('hidden'); // Cannot log until stopped/finished
+            
+            // Re-calculate start time only if the timer was reset, otherwise continue
+            if (startTime === null || totalSeconds === 25 * 60) {
+                 startTime = Date.now();
+            } else {
+                 startTime = Date.now() - ( (25 * 60) - totalSeconds ) * 1000;
+            }
+            
+            timerInterval = setInterval(() => {
+                totalSeconds--;
+                updateTimerDisplay();
+                
+                if (totalSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    totalSeconds = 0;
+                    updateTimerDisplay();
+                    getEl('timer-pause-btn').classList.add('hidden');
+                    getEl('timer-start-btn').classList.remove('hidden');
+                    getEl('timer-log-btn').classList.remove('hidden'); // Log session after completion
+                    showMessage('message-box', 'Time\'s up! Log your study session.', false);
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (!isRunning) return;
+            isRunning = false;
+            clearInterval(timerInterval);
+            getEl('timer-pause-btn').classList.add('hidden');
+            getEl('timer-start-btn').classList.remove('hidden');
+            getEl('timer-log-btn').classList.remove('hidden');
+        }
+
+        function resetTimer() {
+            stopTimer();
+            totalSeconds = 25 * 60;
+            updateTimerDisplay();
+            getEl('timer-log-btn').classList.add('hidden');
+            // Reset local topic only, don't reset input field on initial modal open
+            // sessionTopic = ''; 
+            // getEl('study-topic-input').value = '';
+        }
+        
+        async function logSession() {
+            const topic = getEl('study-topic-input').value.trim() || 'General Study Session';
+            
+            // Calculate the duration in seconds (seconds * 1000)
+            const totalPomodoroDuration = (25 * 60);
+            const remainingDuration = totalSeconds;
+            const loggedDuration = totalPomodoroDuration - remainingDuration; 
+            
+            if (loggedDuration <= 5) { // Minimum 5 seconds logged
+                 showMessage('message-box', 'Session too short to log. Minimum 5 seconds.', true);
+                 return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/study_session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, duration_seconds: loggedDuration })
+                });
+
+                if (response.ok) {
+                    showMessage('message-box', `⏳ Logged ${Math.round(loggedDuration / 60)} minutes of study time!`, false);
+                    resetTimer();
+                    fetchDashboardData();
+                } else {
+                    showMessage('message-box', 'Failed to log study session.', true);
+                }
+            } catch (error) {
+                showMessage('message-box', 'Network error while logging study session.', true);
+            }
+        }
+        
+        // --- QUIZ GENERATOR LOGIC ---
+        
+        function resetQuizState(mode) {
+             const containerEl = getEl('quiz-container');
+             const topicInput = getEl('quiz-topic');
+             
+             getEl('quiz-title-display').textContent = 'Ready for a Quiz!';
+             containerEl.innerHTML = '<p class="text-gray-500 text-center">Your generated quiz will appear here.</p>';
+             getEl('check-quiz-btn').classList.add('hidden');
+             getEl('quiz-play-again-btn').classList.add('hidden');
+             getEl('quiz-back-btn').classList.add('hidden');
+             getEl('quiz-score').textContent = '';
+             currentQuizData = [];
+
+             if (mode === 'topic') {
+                 // Go back to the form
+                 topicInput.value = '';
+             } 
+             
+             // Show the form again
+             getEl('quiz-form').classList.remove('hidden');
+        }
+
+        async function handleGenerateQuiz(event) {
+            event.preventDefault();
+            const topic = getEl('quiz-topic').value;
+            const count = parseInt(getEl('quiz-count').value);
+            const level = getEl('quiz-level').value;
+            const statusEl = getEl('quiz-status');
+            const containerEl = getEl('quiz-container');
+            
+            // Hide form while generating
+            getEl('quiz-form').classList.add('hidden');
+
+            statusEl.textContent = 'Generating quiz... this may take a moment.';
+            getEl('generate-quiz-btn').disabled = true;
+            containerEl.innerHTML = '<p class="text-center text-gray-500">Loading...</p>';
+            getEl('check-quiz-btn').classList.add('hidden');
+            getEl('quiz-score').textContent = '';
+            getEl('quiz-title-display').textContent = `Generating Quiz on: ${topic}`;
+            
+            getEl('quiz-back-btn').classList.add('hidden');
+            getEl('quiz-play-again-btn').classList.add('hidden');
+
+
+            const systemPrompt = `Generate a ${count}-question multiple-choice quiz on the topic "${topic}" at a ${level} difficulty level. Each question must have exactly four options (A, B, C, D). You must strictly follow the provided JSON schema.`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: systemPrompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: QUIZ_SCHEMA
+                },
+                systemInstruction: {
+                    parts: [{ text: "You are a quiz generator. Output structured JSON ONLY." }]
+                }
+            };
+            
+            try {
+                const response = await fetchWithExponentialBackoff(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) throw new Error(`API returned status ${response.status}`);
+                
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (jsonText) {
+                    currentQuizData = JSON.parse(jsonText);
+                    renderQuiz(topic);
+                    statusEl.textContent = 'Quiz ready! Click "Check Answers" when finished.';
+                    getEl('check-quiz-btn').classList.remove('hidden');
+                } else {
+                    throw new Error('AI failed to generate structured quiz data.');
+                }
+            } catch (error) {
+                statusEl.textContent = `Error: Failed to generate quiz. ${error.message}`;
+                containerEl.innerHTML = '<p class="text-red-600 text-center">Could not generate quiz. Try a simpler topic or refresh the page.</p>';
+                getEl('quiz-title-display').textContent = 'Quiz Generation Failed';
+                getEl('quiz-form').classList.remove('hidden'); // Show form again on error
+            } finally {
+                getEl('generate-quiz-btn').disabled = false;
+            }
+        }
+        
+        function renderQuiz(topic) {
+            const containerEl = getEl('quiz-container');
+            containerEl.innerHTML = '';
+            getEl('quiz-title-display').textContent = `Quiz: ${topic}`;
+
+            if (!currentQuizData || currentQuizData.length === 0) {
+                containerEl.innerHTML = '<p class="text-gray-500 text-center">No questions found.</p>';
+                return;
+            }
+
+            currentQuizData.forEach((item, qIndex) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'p-4 bg-gray-100 rounded-lg shadow-md';
+                qDiv.innerHTML = `
+                    <p class="font-bold text-gray-900 mb-3">${qIndex + 1}. ${item.question}</p>
+                    <div id="options-q${qIndex}" class="space-y-2">
+                        ${item.options.map((option, oIndex) => `
+                            <label class="flex items-center space-x-2 p-2 rounded-md cursor-pointer hover:bg-gray-200">
+                                <input type="radio" name="quiz_q${qIndex}" value="${oIndex}" class="form-radio text-green-600">
+                                <span class="text-gray-800">${String.fromCharCode(65 + oIndex)}. ${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="feedback-q${qIndex}" class="mt-2 font-semibold hidden"></div>
+                `;
+                containerEl.appendChild(qDiv);
+            });
+        }
+        
+        function checkQuizAnswers() {
+            let score = 0;
+            const total = currentQuizData.length;
+
+            currentQuizData.forEach((item, qIndex) => {
+                const selectedOption = document.querySelector(`input[name="quiz_q${qIndex}"]:checked`);
+                const feedbackEl = getEl(`feedback-q${qIndex}`);
+                const optionsDiv = getEl(`options-q${qIndex}`);
+                
+                // Clear previous feedback and styling
+                feedbackEl.classList.add('hidden');
+                optionsDiv.querySelectorAll('label').forEach(label => label.classList.remove('bg-red-200', 'bg-green-200', 'font-extrabold'));
+                
+                // Disable all radio buttons
+                optionsDiv.querySelectorAll('input').forEach(input => input.disabled = true);
+
+
+                if (selectedOption) {
+                    const selectedIndex = parseInt(selectedOption.value);
+                    const isCorrect = selectedIndex === item.correctAnswerIndex;
+                    
+                    // Highlight correct answer
+                    optionsDiv.querySelector(`input[value="${item.correctAnswerIndex}"]`).parentNode.classList.add('bg-green-200', 'font-extrabold');
+
+                    if (isCorrect) {
+                        score++;
+                        feedbackEl.textContent = 'Correct! ✅';
+                        feedbackEl.className = 'mt-2 font-semibold text-green-600';
+                        optionsDiv.querySelector(`input[value="${selectedIndex}"]`).parentNode.classList.add('bg-green-200'); // Ensure green even if already highlighted as correct
+                    } else {
+                        feedbackEl.textContent = `Incorrect. The correct answer was ${String.fromCharCode(65 + item.correctAnswerIndex)}.`;
+                        feedbackEl.className = 'mt-2 font-semibold text-red-600';
+                        optionsDiv.querySelector(`input[value="${selectedIndex}"]`).parentNode.classList.add('bg-red-200'); // Highlight user's wrong answer in red
+                    }
+                    feedbackEl.classList.remove('hidden');
+                } else {
+                    feedbackEl.textContent = `Unanswered. The correct answer was ${String.fromCharCode(65 + item.correctAnswerIndex)}.`;
+                    feedbackEl.className = 'mt-2 font-semibold text-yellow-600';
+                    optionsDiv.querySelector(`input[value="${item.correctAnswerIndex}"]`).parentNode.classList.add('bg-green-200', 'font-extrabold'); // Still show correct
+                    feedbackEl.classList.remove('hidden');
+                }
+            });
+
+            const scoreEl = getEl('quiz-score');
+            scoreEl.textContent = `Final Score: ${score}/${total}`;
+            scoreEl.className = `text-center text-2xl font-bold mt-4 ${score === total ? 'text-green-600' : 'text-red-600'}`;
+            
+            // Hide check button and show navigation buttons
+            getEl('check-quiz-btn').classList.add('hidden');
+            getEl('quiz-back-btn').classList.remove('hidden');
+            getEl('quiz-play-again-btn').classList.remove('hidden');
+        }
+
+        // --- WEBCAM/FACE TRACKER SIMULATION LOGIC ---
+
+        function toggleWebcam(forceState) {
+            const video = getEl('webcam-feed');
+            const toggleBtn = getEl('webcam-toggle-btn');
+            const display = getEl('face-mood-display');
+            const overlay = getEl('webcam-overlay');
+            const targetState = forceState !== undefined ? forceState : !isWebcamActive;
+
+            if (targetState) {
+                // Try to start webcam
+                display.textContent = 'Status: Requesting camera access...';
+                
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            webcamStream = stream;
+                            video.srcObject = stream;
+                            video.onloadedmetadata = () => {
+                                video.play();
+                                isWebcamActive = true;
+                                toggleBtn.textContent = 'Stop Webcam';
+                                display.textContent = 'Status: Webcam Active (Simulated Mood: Neutral 😐)';
+                                overlay.classList.add('hidden');
+                                // Simulate mood tracking activity
+                                startSimulatedMoodTracking();
+                            };
+                        })
+                        .catch(err => {
+                            console.error("Webcam access denied or failed:", err);
+                            display.textContent = 'Status: Access Denied. Camera permissions required.';
+                            toggleBtn.textContent = 'Try Again';
+                            overlay.classList.remove('hidden');
+                            stopSimulatedMoodTracking();
+                            showMessage('message-box', 'Error: Could not access webcam. Check permissions.', true);
+                        });
+                } else {
+                    display.textContent = 'Status: Your browser does not support webcam access.';
+                    toggleBtn.textContent = 'Not Supported';
+                    toggleBtn.disabled = true;
+                }
+            } else {
+                // Stop webcam
+                if (webcamStream) {
+                    webcamStream.getTracks().forEach(track => track.stop());
+                }
+                video.srcObject = null;
+                isWebcamActive = false;
+                toggleBtn.textContent = 'Start Webcam';
+                display.textContent = 'Status: Webcam Inactive';
+                overlay.classList.remove('hidden');
+                stopSimulatedMoodTracking();
+            }
+        }
+        
+        let moodSimulationInterval = null;
+        
+        function startSimulatedMoodTracking() {
+            // Simulate mood detection every 3 seconds
+            stopSimulatedMoodTracking();
+            
+            const moods = [
+                { text: 'Neutral 😐', color: 'text-gray-700' },
+                { text: 'Focused 🧐', color: 'text-blue-600' },
+                { text: 'Slightly Happy 😊', color: 'text-green-600' },
+                { text: 'Tired 🥱', color: 'text-yellow-600' },
+                { text: 'Stressed 😟', color: 'text-red-600' }
+            ];
+
+            const display = getEl('face-mood-display');
+            
+            moodSimulationInterval = setInterval(() => {
+                const randomMood = moods[Math.floor(Math.random() * moods.length)];
+                display.innerHTML = `Simulated Mood: <span class="${randomMood.color} font-extrabold">${randomMood.text}</span>`;
+            }, 3000);
+        }
+
+        function stopSimulatedMoodTracking() {
+            if (moodSimulationInterval) {
+                clearInterval(moodSimulationInterval);
+                moodSimulationInterval = null;
+            }
+        }
+
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            showLoginScreen('student'); 
+            updateTimerDisplay(); // Initialize timer display
+            getEl('webcam-overlay').classList.remove('hidden');
+            getEl('face-mood-display').textContent = 'Status: Click "Start Webcam" to begin.';
+
+
+            fetchDashboardData().then(() => {
+            }).catch(error => {
+                console.warn("Initial data fetch failed, showing login screen.", error.message);
+            });
+            
+             // Close dropdown if user clicks outside
+            document.addEventListener('click', (event) => {
+                const dropdown = getEl('profile-dropdown');
+                const button = getEl('profile-button');
+                if (dropdown && button && !dropdown.contains(event.target) && dropdown.classList.contains('active')) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
